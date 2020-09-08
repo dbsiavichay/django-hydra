@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.urls import reverse, reverse_lazy, NoReverseMatch
 from django.utils.text import slugify
 
-from apps.autosite.utils import (
+from hydra.utils import (
     get_apps_from_module,
     get_models_from_app,
     get_models,
