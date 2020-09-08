@@ -1,4 +1,5 @@
-"""Clase para registrar las apps en auto site"""
+"""Classes and functios for register site models"""
+
 import operator
 from functools import reduce
 
@@ -9,7 +10,6 @@ from django.utils.text import slugify
 from django.core.exceptions import FieldDoesNotExist, ImproperlyConfigured
 from django.db.models.base import ModelBase
 from django.forms.utils import pretty_name
-from django.http import JsonResponse
 from django.urls import include, path, reverse_lazy, reverse
 from django.views.generic import (
     ListView,
@@ -19,6 +19,7 @@ from django.views.generic import (
     DeleteView,
 )
 
+# Utilities
 from .utils import (
     get_project_path,
     inspect_clases,
@@ -26,7 +27,9 @@ from .utils import (
     get_field_label_of_model,
     get_attribute_of_instance,
 )
-from .views import BaseView, ModuleView, get_app_view
+
+# Views
+from hydra.views import BaseView, ModuleView, get_app_view
 
 
 class ModelSite:
