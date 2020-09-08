@@ -8,7 +8,7 @@ from .utils import inspect_sites, get_installed_apps
 from . import site
 
 
-class AutositeConfig(AppConfig):
+class HydraConfig(AppConfig):
     name = 'hydra'
 
     def ready(self):

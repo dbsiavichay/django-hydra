@@ -1,0 +1,53 @@
+Metadata-Version: 1.1
+Name: django-hydra
+Version: 0.1
+Summary: A Django app to conduct Web-based polls.
+Home-page: https://www.example.com/
+Author: Denis Siavichay
+Author-email: dbsiavichay@gmail.com
+License: MIT  # Example license
+Description: =====
+        Hydra
+        =====
+        
+        Hydra is a Django app to build templates easily, and generate site page like django admin.
+        
+        Detailed documentation is in the "docs" directory.
+        
+        Quick start
+        -----------
+        
+        1. Add "hydra" to your INSTALLED_APPS setting like this::
+        
+            INSTALLED_APPS = [
+                ...
+                'hydra',
+            ]
+        
+        2. Include the polls URLconf in your project urls.py like this::
+        
+            path('polls/', include('polls.urls')),
+        
+        3. Run ``python manage.py migrate`` to create the polls migrations.
+        
+        4. Continue
+Platform: UNKNOWN
+Classifier: Environment :: Web Environment
+Classifier: Framework :: Django
+Classifier: Framework :: Django :: 2.0
+Classifier: Framework :: Django :: 2.1
+Classifier: Framework :: Django :: 2.2
+Classifier: Framework :: Django :: 3.0
+Classifier: Framework :: Django :: 3.1
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Topic :: Internet :: WWW/HTTP
+Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content
