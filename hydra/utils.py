@@ -12,7 +12,6 @@ from django.urls import reverse_lazy, reverse, NoReverseMatch
 
 def inspect_sites(app):
     from . import ModelSite
-
     results = inspect_clases(f"{app}.sites", ModelSite)
     return (cls for cls in results if cls.model is not None)
 
@@ -29,7 +28,7 @@ def inspect_clases(module_name, parent_class):
             and not cls == parent_class
         )
     except ModuleNotFoundError as error:
-        # print(error)
+        print(error)
         pass
     return results
 

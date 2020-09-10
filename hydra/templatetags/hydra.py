@@ -428,7 +428,7 @@ class FieldNode(Node):
 
             context.update({"field": bounded_field})
             widget = widget_type(bounded_field)
-            template_name = "autosite/forms/{widget}.html".format(widget=widget)
+            template_name = "hydra/forms/{widget}.html".format(widget=widget)
             try:
                 t = context.template.engine.get_template(template_name)
                 component = t.render(context)
@@ -439,7 +439,7 @@ class FieldNode(Node):
                 return bounded_field
 
 
-@register.inclusion_tag("autosite/forms/form.html")
+@register.inclusion_tag("hydra/forms/form.html")
 def render_form(form, **kwargs):
     """
     Args:
