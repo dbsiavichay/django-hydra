@@ -186,3 +186,10 @@ def get_model(app_name):
     for site in sites:
         modelos.append(site.model)
     return modelos
+
+
+def get_model_info(model_class):
+    """Obtiene la información de la clase"""
+    info = model_class._meta.app_label, model_class._meta.model_name
+    # info = self.model._meta.app_label, slugify(self.model._meta.verbose_name)
+    return info

@@ -7,10 +7,14 @@ django_hydra.egg-info/SOURCES.txt
 django_hydra.egg-info/dependency_links.txt
 django_hydra.egg-info/top_level.txt
 hydra/__init__.py
+hydra/admin.py
 hydra/apps.py
 hydra/base.py
+hydra/context_processors copy.py
 hydra/context_processors.py
 hydra/mixins.py
+hydra/models.py
+hydra/sites.py
 hydra/tests.py
 hydra/utils.py
 hydra/views.py
