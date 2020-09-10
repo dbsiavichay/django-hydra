@@ -48,8 +48,11 @@ class Menu(models.Model):
         related_name = 'updated_menus',
         verbose_name='modificado por'
     )
-    sequence = models.PositiveSmallIntegerField()
+    sequence = models.PositiveSmallIntegerField(verbose_name='secuencia')
     is_active = models.BooleanField(default=True, verbose_name='activo?')
+
+    class Meta:
+        ordering = ('sequence',)
 
     def __str__(self):
         return f'{self.parent}/{self.name}' if self.parent else self.name
