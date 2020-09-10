@@ -1,0 +1,12 @@
+.vscode
+*.pyc
+*~
+*.sqlite3
+*.lock
+media/
+**/migrations/*
+!**/migrations/__init__.py
+!**/hydra/migrations/unaccent_extension.py
+.DS_Store
+.env
+
