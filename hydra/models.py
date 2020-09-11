@@ -5,7 +5,6 @@ from django.db import models
 from django.urls import reverse_lazy
 
 # Utilities
-
 from .utils import get_model_info
 
 
@@ -21,6 +20,7 @@ class Menu(models.Model):
         verbose_name='menú padre'
     )
     name = models.CharField(max_length=128, verbose_name='nombre')
+    route = models.CharField(max_length=512, verbose_name='ruta')
     content_type = models.ForeignKey(
         'contenttypes.ContentType',
         blank = True,
@@ -52,7 +52,7 @@ class Menu(models.Model):
     is_active = models.BooleanField(default=True, verbose_name='activo?')
 
     class Meta:
-        ordering = ('sequence',)
+        ordering = ('route', 'sequence')
 
     def __str__(self):
         return f'{self.parent}/{self.name}' if self.parent else self.name
