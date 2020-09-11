@@ -12,12 +12,14 @@ hydra/apps.py
 hydra/base.py
 hydra/context_processors copy.py
 hydra/context_processors.py
+hydra/forms.py
 hydra/mixins.py
 hydra/models.py
 hydra/sites.py
 hydra/tests.py
 hydra/utils.py
 hydra/views.py
+hydra/migrations/0001_menu.py
 hydra/migrations/__init__.py
 hydra/migrations/unaccent_extension.py
 hydra/templatetags/__init__.py

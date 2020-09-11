@@ -2,7 +2,8 @@
 
 # Django
 from django.db import models
-from django.urls import reverse_lazy
+from django.urls import reverse
+from django.urls.exceptions import NoReverseMatch
 
 # Utilities
 from .utils import get_model_info
@@ -62,5 +63,9 @@ class Menu(models.Model):
         url = '#'
         if model_class:
             info = get_model_info(model_class)
-            url = reverse_lazy('site:%s_%s_list' % info)
+            try:
+                url = reverse('site:%s_%s_list' % info)
+            except NoReverseMatch:
+                pass
+             
         return url
