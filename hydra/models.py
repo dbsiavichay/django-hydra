@@ -10,7 +10,7 @@ from .utils import get_model_info
 
 
 class Menu(models.Model):
-    """ Models for menú """
+    """ Models for menu """
 
     parent = models.ForeignKey(
         'self',
@@ -34,20 +34,6 @@ class Menu(models.Model):
         blank=True,
         null=True, 
         verbose_name='clase css del ícono'
-    )
-    created_date = models.DateTimeField(auto_now_add=True, verbose_name='fecha de creación')
-    created_user = models.ForeignKey(
-        'authentication.User', 
-        on_delete = models.PROTECT,
-        related_name = 'created_menus', 
-        verbose_name = 'creado por'
-    )
-    modified_date = models.DateTimeField(auto_now=True, verbose_name='última fecha de modificación')
-    modified_user = models.ForeignKey(
-        'authentication.User', 
-        on_delete=models.PROTECT, 
-        related_name = 'updated_menus',
-        verbose_name='modificado por'
     )
     sequence = models.PositiveSmallIntegerField(verbose_name='secuencia')
     is_active = models.BooleanField(default=True, verbose_name='activo?')
