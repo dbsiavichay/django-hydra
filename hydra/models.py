@@ -55,3 +55,4 @@ class Menu(models.Model):
                 pass
              
         return url
+

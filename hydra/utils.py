@@ -9,6 +9,10 @@ from django.conf import settings
 from django.apps import apps as djangoapps
 from django.urls import reverse_lazy, reverse, NoReverseMatch
 
+# Models
+from .models import Menu
+from django.contrib.contenttypes.models import ContentType
+
 
 def inspect_sites(app):
     from . import ModelSite
@@ -193,3 +197,28 @@ def get_model_info(model_class):
     info = model_class._meta.app_label, model_class._meta.model_name
     # info = self.model._meta.app_label, slugify(self.model._meta.verbose_name)
     return info
+
+
+def map_menu():
+    apps = (app for app in djangoapps.get_app_configs() if 'apps' in app.name)
+    sequence = 1
+    for app in apps:
+        menu = Menu.objects.create(
+            name = app.verbose_name,
+            route = app.verbose_name,
+            sequence = sequence
+        )
+        sequence += 1
+
+        index = 1
+        for model in app.get_models():
+            submenu = Menu(
+                parent = menu,
+                name = model._meta.verbose_name_plural,
+                content_type = ContentType.object.get_for_model(model),
+                sequence = index
+            )
+
+            submenu.route = str(submenu)
+            submenu.save()
+            index += 1
