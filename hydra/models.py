@@ -4,6 +4,8 @@
 from django.db import models
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
+from django.contrib.contenttypes.models import ContentType
+from django.apps import apps
 
 # Utilities
 from .utils import get_model_info
@@ -55,4 +57,29 @@ class Menu(models.Model):
                 pass
              
         return url
+
+def map():
+    Menu.objects.all().delete()
+    configs = (app for app in apps.get_app_configs() if 'apps' in app.name)
+    sequence = 1
+    for app in configs:
+        menu = Menu.objects.create(
+            name = app.verbose_name.capitalize(),
+            route = app.verbose_name,
+            sequence = sequence
+        )
+        sequence += 1
+
+        index = 1
+        for model in app.get_models():
+            submenu = Menu(
+                parent = menu,
+                name = model._meta.verbose_name_plural.capitalize(),
+                content_type = ContentType.objects.get_for_model(model),
+                sequence = index
+            )
+
+            submenu.route = str(submenu)
+            submenu.save()
+            index += 1
 

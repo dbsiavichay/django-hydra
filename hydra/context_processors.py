@@ -15,7 +15,9 @@ from .utils import get_apps
 
 
 def menu(request):
-    return {'menu_list': build_menu()}
+    return {
+        'menu_list': build_menu(),
+    }
 
 
 def build_menu():

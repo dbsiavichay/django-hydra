@@ -135,12 +135,9 @@ class BaseView:
 class ModuleView(TemplateView):
     """Clase para definir las vistas de los módulos de aplicaciones"""
 
-    module_name = None
-    module_label = None
+    app_name = None
+    app_label = None
     template_name = None
-    app_template_name = None
-    icon = ""
-    category = ""
     models = None
 
     def get_context_data(self, **kwargs):

@@ -20,202 +20,14 @@ from django.template.base import (
     VariableDoesNotExist,
 )
 
+# Exceptions
+from django.template.exceptions import TemplateDoesNotExist
 
 from django.core.exceptions import FieldDoesNotExist
 from django.forms.utils import pretty_name
 
 
 register = template.Library()
-
-
-class TableNode(Node):
-    child_nodelists = ("nodelist_headers", "nodelist_loop")
-
-    def __init__(self, loopvars, sequence, is_edit, nodelist_headers, nodelist_loop):
-        """
-        Args:
-            loopvars:
-            sequence:
-            is_edit:
-            nodelist_headers:
-            nodelist_loop:
-        """
-        self.loopvars, self.sequence = loopvars, sequence
-        self.is_edit = is_edit
-        self.nodelist_headers, self.nodelist_loop = nodelist_headers, nodelist_loop
-
-    def __repr__(self):
-        edit_text = " edit" if self.is_edit else ""
-        return "<Table Node: ui_table %s in %s, tail_len: %d%s>" % (
-            ", ".join(self.loopvars),
-            self.sequence,
-            len(self.nodelist_loop),
-            edit_text,
-        )
-
-    def __iter__(self):
-        for node in self.nodelist_loop:
-            yield node
-
-    def render(self, context):
-        """
-        Args:
-            context:
-        """
-        self.nodelist_headers = [
-            node for node in self.nodelist_headers if not isinstance(node, TextNode)
-        ]
-        self.nodelist_loop = [
-            node for node in self.nodelist_loop if not isinstance(node, TextNode)
-        ]
-
-        len_nodelist_headers = len(self.nodelist_headers)
-        len_nodelist_loop = len(self.nodelist_loop)
-
-        if len_nodelist_headers != len_nodelist_loop:
-            raise ValueError(
-                "There are {} headers and {} column values, need the same length".format(
-                    len_nodelist_headers, len_nodelist_loop
-                )
-            )
-
-        if "forloop" in context:
-            parentloop = context["forloop"]
-        else:
-            parentloop = {}
-        with context.push():
-            try:
-                values = self.sequence.resolve(context, True)
-            except VariableDoesNotExist:
-                values = []
-            if values is None:
-                values = []
-            if not hasattr(values, "__len__"):
-                values = list(values)
-            len_values = len(values)
-
-            num_loopvars = len(self.loopvars)
-            unpack = num_loopvars > 1
-            # Create a forloop value in the context.  We'll update counters on each
-            # iteration just below.
-            loop_dict = context["forloop"] = {"parentloop": parentloop}
-
-            rows = []
-            for i, item in enumerate(values):
-                # Shortcuts for current loop iteration number.
-                loop_dict["counter"] = i + 1
-
-                # Boolean values designating first and last times through loop.
-                loop_dict["first"] = i == 0
-                loop_dict["last"] = i == len_values - 1
-
-                pop_context = False
-                if unpack:
-                    # If there are multiple loop variables, unpack the item into
-                    # them.
-                    try:
-                        len_item = len(item)
-                    except TypeError:  # not an iterable
-                        len_item = 1
-                    # Check loop variable count before unpacking
-                    if num_loopvars != len_item:
-                        raise ValueError(
-                            "Need {} values to unpack in for loop; got {}. ".format(
-                                num_loopvars, len_item
-                            )
-                        )
-                    unpacked_vars = dict(zip(self.loopvars, item))
-                    pop_context = True
-                    context.update(unpacked_vars)
-                else:
-                    context[self.loopvars[0]] = item
-
-                row = []
-                for node in self.nodelist_loop:
-                    result = node.render_annotated(context)
-                    t = context.template.engine.get_template(
-                        "ui_components/table/td.html"
-                    )
-                    td = t.render(
-                        Context({"td": result}, autoescape=context.autoescape)
-                    )
-                    row.append(td)
-
-                t = context.template.engine.get_template("ui_components/table/tr.html")
-                tr = t.render(
-                    Context(
-                        {"row": row, "is_edit": self.is_edit, "object": item},
-                        autoescape=context.autoescape,
-                    )
-                )
-                rows.append(tr)
-
-                if pop_context:
-                    # The loop variables were pushed on to the context so pop them
-                    # off again. This is necessary because the tag lets the length
-                    # of loopvars differ to the length of each set of items and we
-                    # don't want to leave any vars from the previous loop on the
-                    # context.
-                    context.pop()
-
-            headers = []
-            for node in self.nodelist_headers:
-                header = node.render_annotated(context)
-                headers.append(header)
-
-            if self.is_edit:
-                headers.append("Editar")
-
-            t = context.template.engine.get_template("ui_components/table/table.html")
-            table = t.render(
-                Context(
-                    {"headers": headers, "rows": rows}, autoescape=context.autoescape
-                )
-            )
-
-        return mark_safe(table)
-
-
-@register.tag("ui_table")
-def ui_table(parser, token):
-    """
-    Args:
-        parser:
-        token:
-    """
-    bits = token.split_contents()
-    if len(bits) < 4:
-        raise TemplateSyntaxError(
-            "'ui_table' statements should have at least four"
-            " words: %s" % token.contents
-        )
-
-    is_edit = bits[-1] == "edit"
-    in_index = -3 if is_edit else -2
-    if bits[in_index] != "in":
-        raise TemplateSyntaxError(
-            "'ui_table' statements should use the format"
-            " 'ui_table x in y': %s" % token.contents
-        )
-
-    invalid_chars = frozenset((" ", '"', "'", FILTER_SEPARATOR))
-    loopvars = re.split(r" *, *", " ".join(bits[1:in_index]))
-    for var in loopvars:
-        if not var or not invalid_chars.isdisjoint(var):
-            raise TemplateSyntaxError(
-                "'ui_table' tag received an invalid argument:" " %s" % token.contents
-            )
-
-    sequence = parser.compile_filter(bits[in_index + 1])
-    nodelist_headers = parser.parse(("body", "endui_table"))
-    token = parser.next_token()
-    if token.contents == "body":
-        nodelist_loop = parser.parse(("endui_table",))
-        parser.delete_first_token()
-    else:
-        nodelist_empty = None
-
-    return TableNode(loopvars, sequence, is_edit, nodelist_headers, nodelist_loop)
 
 
 def silence_without_field(fn):
@@ -285,6 +97,18 @@ def append_attr(field, attr):
         attr:
     """
 
+    def process_str(field, attr):
+        params = attr.split(":", 1)
+        attribute = params[0]
+        value = params[1] if len(params) == 2 else ""
+
+        content = field.split('name')
+        content.insert(1, f'{attribute}="{value}" name')
+        field = ''.join(content)
+        return mark_safe(field)
+
+    if isinstance(field, str): return process_str(field, attr)
+
     def process(widget, attrs, attribute, value):
         if attrs.get(attribute):
             attrs[attribute] += " " + value
@@ -292,7 +116,7 @@ def append_attr(field, attr):
             attrs[attribute] = widget.attrs[attribute] + " " + value
         else:
             attrs[attribute] = value
-
+    
     return _process_field_attributes(field, attr, process)
 
 
@@ -386,7 +210,7 @@ def render_field(parser, token):
         raise TemplateSyntaxError(error_msg)
 
     form_field = parser.compile_filter(form_field)
-
+    
     attrs = []
     for pair in attr_list:
         match = ATTRIBUTE_RE.match(pair)
@@ -415,6 +239,7 @@ class FieldNode(Node):
         Args:
             context:
         """
+
         bounded_field = self.field.resolve(context)
         field = getattr(bounded_field, "field", None)
         with context.push():
@@ -429,12 +254,13 @@ class FieldNode(Node):
             context.update({"field": bounded_field})
             widget = widget_type(bounded_field)
             template_name = "hydra/forms/{widget}.html".format(widget=widget)
+            
             try:
                 t = context.template.engine.get_template(template_name)
                 component = t.render(context)
                 context.pop()
                 return mark_safe(component)
-            except:
+            except TemplateDoesNotExist:
                 print(widget)
                 return bounded_field
 
