@@ -1,13 +1,18 @@
+# Python
 from copy import copy
+import types
+import re
+
+# Django
 from django import template
 from django.urls import reverse_lazy
 from django.forms.models import model_to_dict
 from django.contrib.contenttypes.models import ContentType
 from django.utils.safestring import mark_safe
 from collections.abc import Iterable
+from django.conf import settings
 
-import types
-import re
+
 
 from django.template import Context
 from django.template.base import (
@@ -23,7 +28,7 @@ from django.template.base import (
 # Exceptions
 from django.template.exceptions import TemplateDoesNotExist
 
-from django.core.exceptions import FieldDoesNotExist
+from django.core.exceptions import FieldDoesNotExist, ImproperlyConfigured
 from django.forms.utils import pretty_name
 
 
@@ -253,6 +258,7 @@ class FieldNode(Node):
 
             context.update({"field": bounded_field})
             widget = widget_type(bounded_field)
+
             template_name = "hydra/forms/{widget}.html".format(widget=widget)
             
             try:
@@ -284,71 +290,6 @@ def render_form(form, **kwargs):
     col_class = "col-{breakpoint}-{col}".format(breakpoint=breakpoint, col=col)
     return {"form": form, "col": col_class}
 
-
-@register.tag
-def render_component(parser, token):
-    """Render a form field using given attribute-value pairs
-
-    Takes form field as first argument and list of attribute-value pairs for
-    all other arguments. Attribute-value pairs should be in the form of
-    attribute=value or attribute="a value" for assignment and attribute+=value
-    or attribute+="value" for appending.
-
-    Args:
-        parser:
-        token:
-    """
-    error_msg = (
-        '%r tag requires a form field followed by a list of attributes and values in the form attr="value"'
-        % token.split_contents()[0]
-    )
-    try:
-        bits = token.split_contents()
-        tag_name = bits[0]
-        attr_list = bits[1:]
-    except ValueError:
-        raise TemplateSyntaxError(error_msg)
-
-    attrs = []
-    for pair in attr_list:
-        match = ATTRIBUTE_RE.match(pair)
-        if not match:
-            raise TemplateSyntaxError(error_msg + ": %s" % pair)
-        dct = match.groupdict()
-        attr, value = dct["attr"], parser.compile_filter(dct["value"])
-
-        attrs.append((attr, value))
-
-    return ComponentNode(attrs)
-
-
-class ComponentNode(Node):
-    def __init__(self, attrs):
-        """
-        Args:
-            attrs:
-        """
-        self.attrs = attrs
-
-    def render(self, context):
-        """
-        Args:
-            context:
-        """
-        template = None
-        with context.push():
-            for key, value in self.attrs:
-                if key == "template":
-                    template = value.resolve(context)
-                else:
-                    context.update({key: value.resolve(context)})
-
-            t = context.template.engine.get_template(template)
-            component = t.render(context)
-
-            context.pop()
-
-        return mark_safe(component)
 
 
 # TEMPLATE TAGS PARA RECUPERAR VERBOSE_NAME

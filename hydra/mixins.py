@@ -1,5 +1,47 @@
 """Mixins for autosite"""
+
+# Django
 from django.contrib.auth.mixins import PermissionRequiredMixin
+
+#Utils
+from .utils import get_field_label_of_model
+
+
+class FormsetMixin:
+    """Class for add single formset in Form"""
+
+    formset_class = None
+
+    def get_context_data(self, **kwargs):
+        """
+        Args:
+            **kwargs:
+        """
+        context = super().get_context_data(**kwargs)
+        formset_headers = (
+            get_field_label_of_model(self.formset_class.form._meta.model, field_name) 
+            for field_name in self.formset_class.form._meta.fields
+        )
+        context.update({
+            "formset_headers": formset_headers,
+            "formset": self.get_formset()
+        })
+        return context
+
+    """
+    def form_valid(self, form):
+        formset = self.get_formset()
+        with transaction.atomic():
+            self.object = form.save()
+            if formset.is_valid():
+                formset.instance = self.object
+                formset.save()
+        return redirect(self.get_succes_url())
+    """
+
+    def get_formset(self):
+        """Function to get formset"""
+        return self.formset_class(**self.get_form_kwargs())
 
 
 class MultiplePermissionRequiredModuleMixin(PermissionRequiredMixin):
