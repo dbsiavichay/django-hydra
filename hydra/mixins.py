@@ -1,7 +1,9 @@
 """Mixins for autosite"""
 
 # Django
+from django.shortcuts import redirect
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.db import transaction, IntegrityError
 
 #Utils
 from .utils import get_field_label_of_model
@@ -10,7 +12,7 @@ from .utils import get_field_label_of_model
 class FormsetMixin:
     """Class for add single formset in Form"""
 
-    formset_class = None
+    formset = None
 
     def get_context_data(self, **kwargs):
         """
@@ -19,8 +21,8 @@ class FormsetMixin:
         """
         context = super().get_context_data(**kwargs)
         formset_headers = (
-            get_field_label_of_model(self.formset_class.form._meta.model, field_name) 
-            for field_name in self.formset_class.form._meta.fields
+            get_field_label_of_model(self.formset.form._meta.model, field_name) 
+            for field_name in self.formset.form._meta.fields
         )
         context.update({
             "formset_headers": formset_headers,
@@ -28,7 +30,6 @@ class FormsetMixin:
         })
         return context
 
-    """
     def form_valid(self, form):
         formset = self.get_formset()
         with transaction.atomic():
@@ -37,11 +38,58 @@ class FormsetMixin:
                 formset.instance = self.object
                 formset.save()
         return redirect(self.get_succes_url())
-    """
 
     def get_formset(self):
         """Function to get formset"""
-        return self.formset_class(**self.get_form_kwargs())
+        return self.formset(**self.get_form_kwargs())
+
+
+class MultipleFormsetMixin:
+    """Class for add multiple formsets in form"""
+
+    formsets = ()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            "formsets": self.get_formsets()
+        })
+        return context
+
+    
+    def form_valid(self, form):
+        if not self.validate_formsets():
+            return self.form_invalid(form)
+
+        try:
+            with transaction.atomic():
+                self.object = form.save(commit=False)
+                self.save_formsets()
+            return redirect(self.get_succes_url())
+        except IntegrityError:
+            return self.form_invalid(form)
+    
+
+    def get_formsets(self):
+        """Method to get all formsets"""
+        formsets = [formset(**self.get_form_kwargs()) for formset in self.formsets]
+        return formsets
+
+    def validate_formsets(self):
+        """Method to validate all formsets"""
+        valid = False
+        for formset in self.get_formsets():
+            valid = formset.is_valid()
+            if not valid: return valid
+        return valid
+
+    def save_formsets(self):
+        """Method to save all formsets"""
+        for formset in self.get_formsets():
+            if formset.is_valid():
+                formset.instance = self.object
+                formset.save()
+
 
 
 class MultiplePermissionRequiredModuleMixin(PermissionRequiredMixin):

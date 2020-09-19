@@ -136,6 +136,11 @@ def add_class(field, css_class):
     return append_attr(field, "class:" + css_class)
 
 
+@register.filter("data")
+@silence_without_field
+def set_data(field, data):
+    return set_attr(field, "data-" + data)
+
 @register.filter(name="field_type")
 def field_type(field):
     """Template filter that returns field class name (in lower case). E.g. if
@@ -273,13 +278,7 @@ class FieldNode(Node):
 
 @register.inclusion_tag("hydra/forms/form.html")
 def render_form(form, **kwargs):
-    """
-    Args:
-        form:
-        **kwargs:
-    """
-    # import ipdb;
-    # ipdb.set_trace()f
+    
     calculate_cols = len(form.fields) // 10
     if len(form.fields) % 10 > 0:
         calculate_cols += 1
