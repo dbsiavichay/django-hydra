@@ -38,6 +38,7 @@ class ModelSite:
     #Views
     model = None
     form_class = None # Used for create Create and Update views
+    fieldsets = () # Used for generate group of fields
     list_display = ('__str__',) # Used for create ListView with de specified fields
     detail_display = () # Used for create DetailView with specified fields
     views_display = 'form', 'detail', 'delete' # Says Hydra which views create

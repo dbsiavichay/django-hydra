@@ -293,21 +293,16 @@ def render_form(form, **kwargs):
 
 
 # TEMPLATE TAGS PARA RECUPERAR VERBOSE_NAME
+"""
 @register.filter
 def verbose_name(obj):
-    """
-    Args:
-        obj:
-    """
+    
     return obj._meta.verbose_name
 
 
 @register.filter
 def verbose_name_plural(obj):
-    """
-    Args:
-        obj:
-    """
+   
     try:
         return obj._meta.verbose_name_plural
     except:
@@ -316,21 +311,13 @@ def verbose_name_plural(obj):
 
 @register.simple_tag
 def get_verbose_field_name(instance, field_name):
-    """Returns verbose_name for a field.
-
-    Args:
-        instance:
-        field_name:
-    """
+   
     return instance._meta.get_field(field_name).verbose_name.title()
 
 
 @register.filter
 def get_class(obj):
-    """
-    Args:
-        obj:
-    """
+    
     return obj.model.__name__
 
 
@@ -339,10 +326,7 @@ def get_class(obj):
 # EJ. OBJECT.OBJECTS.GET(PK=1)
 @register.filter
 def get_field_names(obj):
-    """
-    Args:
-        obj:
-    """
+    
     return obj._meta.fields
     # El siguiente metodo recupera incluso las tablas subrelacionadas
     # return obj._meta.get_fields()
@@ -350,30 +334,21 @@ def get_field_names(obj):
 
 @register.filter
 def get_field_verbose_names(obj):
-    """
-    Args:
-        obj:
-    """
+   
     return obj._meta.verbose_name.title()
 
 
 @register.simple_tag
 def get_field_values(obj):
-    """
-    Args:
-        obj:
-    """
+    
     return model_to_dict(obj)
-
+"""
 
 # LIST VIEW CON VALUES
+"""
 @register.simple_tag
 def obtener_cabeceras(obj, numero):
-    """
-    Args:
-        obj:
-        numero:
-    """
+    
     objeto = model_to_dict(obj)
     cabeceras = []
     for c in objeto.keys():
@@ -383,11 +358,7 @@ def obtener_cabeceras(obj, numero):
 
 @register.simple_tag
 def obtener_valores(obj, numero):
-    """
-    Args:
-        obj:
-        numero:
-    """
+   
     objeto = model_to_dict(obj)
     objeto = model_to_dict(obj)
     valores = []
@@ -398,10 +369,7 @@ def obtener_valores(obj, numero):
 
 @register.filter
 def verbose_name_and_name(obj):
-    """
-    Args:
-        obj:
-    """
+   
     objeto = model_to_dict(obj)
     lista = []
     for c in objeto.keys():
@@ -411,24 +379,21 @@ def verbose_name_and_name(obj):
     return lista
 
 
-from datetime import datetime, date
 
-# VALIDAR SI ES FECHA
+
+
+
+
+
 @register.filter
 def is_date(val):
-    """
-    Args:
-        val:
-    """
+  
     return isinstance(val, date)
 
 
 @register.simple_tag
 def get_headers(model_site):
-    """
-    Args:
-        model_site:
-    """
+ 
     headers = []
     for name in model_site.list_display:
         try:
@@ -454,11 +419,6 @@ def get_headers(model_site):
 
 @register.simple_tag
 def get_results(model_site, queryset):
-    """
-    Args:
-        model_site:
-        queryset:
-    """
     results = []
     for instance in queryset:
         try:
@@ -491,21 +451,9 @@ def get_results(model_site, queryset):
     return results
 
 
-@register.filter(name="zip")
-def zip_lists(a, b):
-    """
-    Args:
-        a:
-        b:
-    """
-    return zip(a, b)
-
 
 @register.simple_tag
 def model_name(value):
-    """
-    Django template filter which returns the verbose name of a model.
-    """
     if hasattr(value, "model"):
         value = value.model
 
@@ -552,7 +500,6 @@ def has_permission(request, view_permissions):
 
 @register.simple_tag
 def permission(request, object, action):
-    """Verificar si un usuario tiene un permiso de forma dinámica"""
     try:
         model = object.__class__
     except:
@@ -576,7 +523,7 @@ def render_pdf(context, tpl_string):
 
 @register.simple_tag(takes_context=True)
 def params(context, **kwargs):
-    """
+    
     Return encoded URL parameters that are the same as the current
     request's parameters, only with the specified GET parameters added or changed.
 
@@ -591,10 +538,11 @@ def params(context, **kwargs):
     would expand to
 
     <a href="/things/?with_frosting=true&page=3">Page 3</a>
-    """
     d = context["request"].GET.copy()
     for k, v in kwargs.items():
         d[k] = v
     for k in [k for k, v in d.items() if not v]:
         del d[k]
     return d.urlencode()
+    
+"""
