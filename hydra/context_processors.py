@@ -1,17 +1,6 @@
-# Python
-import inspect
-from importlib import import_module
-
-# Django
-from django.conf import settings
 
 # Models
 from hydra.models import Menu
-
-# Utilities
-from .utils import get_apps_from_module
-from .views import ModuleView
-from .utils import get_apps
 
 
 def menu(request):

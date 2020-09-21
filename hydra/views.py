@@ -1,81 +1,59 @@
-from django.shortcuts import render
-from django.urls import reverse, reverse_lazy, NoReverseMatch
-from django.utils.text import slugify
-
-from hydra.utils import (
-    get_apps_from_module,
-    get_models_from_app,
-    get_models,
-    get_apps,
-)
+# Django
 from django.views.generic import TemplateView
+from django.urls import reverse, reverse_lazy, NoReverseMatch
+from django.conf import settings
+from django.utils.html import format_html
+
+# Utils
+from hydra.utils import import_class
 
 
 class BaseView:
     """Clase base que contiene la información común de todas las subclases"""
 
-    def get_info(self):
-        """Obtiene la información de la clase"""
-        info = self.model._meta.app_label, self.model._meta.model_name
-        # info = self.model._meta.app_label, slugify(self.model._meta.verbose_name)
-        return info
+    def get_base(self, menu):
+        base = [(menu.name, f"/{menu.route}/")]
+        if menu.parent:
+            base =  self.get_base(menu.parent) + base
+        return base
 
-    def _get_breadcumbs(self, prefix_url_name):
-        """Permite obtener los breadcumbs de auto site"""
-        # Home
-        base_breadcumbs = [("Inicio", "/")]
-        # Prefix ulr
-        if prefix_url_name:
-            app_url = self._get_app_url()
-            url, anything = app_url.split(self.model._meta.app_label)
-            base_breadcumbs.append((prefix_url_name.capitalize(), url))
-        # App url
-        base_breadcumbs.append(
-            (self.model._meta.app_config.verbose_name, self._get_app_url())
-        )
-        return base_breadcumbs
 
-    def _get_list_breadcumbs(self, prefix_url_name):
-        """Obtiene el breadcumb para List View"""
-        breadcumbs = self._get_breadcumbs(prefix_url_name)
-        breadcumbs.append(
-            (
-                self.model._meta.verbose_name_plural,
-                reverse_lazy("site:%s_%s_list" % self.get_info()),
-            )
-        )
-        return breadcumbs
+    def get_base_breadcrumbs(self):
+        base_breadcrumbs = [(self.site.get_breadcrumb_text("home"), "/")]
+        Menu = import_class("hydra.models", "Menu")
+        if not Menu or not self.site.routes: return base_breadcrumbs
+        menu = Menu.objects.get(route=self.site.routes[0])
+        base_breadcrumbs.extend(self.get_base(menu))
+        return base_breadcrumbs
 
-    def _get_create_breadcumbs(self, prefix_url_name):
+    def get_create_breadcrumbs(self):
         """Obtiene el breadcumb para Create View"""
-        breadcumbs = self._get_list_breadcumbs(prefix_url_name)
-        breadcumbs.append(("Crear", "#"))
-        return breadcumbs
+        breadcrumbs = self.get_base_breadcrumbs()
+        breadcrumbs.append((self.site.get_breadcrumb_text("create"), "#"))
+        return breadcrumbs
 
-    def _get_update_breadcumbs(self, prefix_url_name):
+    def get_update_breadcrumbs(self):
         """Obtiene el breadcumb para Update View"""
-        breadcumbs = self._get_list_breadcumbs(prefix_url_name)
-        breadcumbs.append(("Editar", "#"))
-        return breadcumbs
+        breadcrumbs = self.get_base_breadcrumbs()
+        breadcrumbs.append((self.site.get_breadcrumb_text("update"), "#"))
+        return breadcrumbs
 
-    def _get_detail_breadcumbs(self, prefix_url_name):
+    def get_detail_breadcrumbs(self):
         """Obtiene el breadcumb para Detail View"""
-        breadcumbs = self._get_list_breadcumbs(prefix_url_name)
-        breadcumbs.append(
+        url_name = self.site.get_url_name("detail")
+        breadcrumbs = self.get_base_breadcrumbs()
+        breadcrumbs.append(
             (
-                str(self.object),
-                reverse_lazy(
-                    "site:%s_%s_detalle" % self.get_info(),
-                    args=[self._get_slug_or_pk(self.object)],
-                ),
+                self.site.get_breadcrumb_text("detail") or str(self.object),
+                reverse_lazy(url_name, args=[self._get_slug_or_pk(self.object)],),
             )
         )
-        return breadcumbs
+        return breadcrumbs
 
-    def _get_delete_breadcumbs(self, prefix_url_name):
-        breadcumbs = self._get_detail_breadcumbs(prefix_url_name)
-        breadcumbs.append(("Eliminar", "#"))
-        return breadcumbs
+    def _get_delete_breadcrumbs(self):
+        breadcrumbs = self.get_detail_breadcrumbs()
+        breadcrumbs.append((self.site.get_breadcrumb_text("delete"), "#"))
+        return breadcrumbs
 
     def _get_app_url(self):
         """Obtiene la url de la app"""
@@ -92,42 +70,28 @@ class BaseView:
         urls = {}
         slug_or_pk = self._get_slug_or_pk(instance=instance)
         try:
-            urls.update({"add_url": reverse("site:%s_%s_crear" % self.get_info())})
+            url_name = self.site.get_url_name("create")
+            urls.update({"add_url": reverse(url_name)})
         except NoReverseMatch:
-            pass
+            print("Url not found: %s" % url_name)
 
         try:
-            urls.update(
-                {
-                    "update_url": reverse(
-                        "site:%s_%s_editar" % self.get_info(), args=[slug_or_pk]
-                    )
-                }
-            )
+            url_name = self.site.get_url_name("update")
+            urls.update({"update_url": reverse(url_name, args=[slug_or_pk])})
         except NoReverseMatch:
-            pass
+            print("Url not found: %s" % url_name)
 
         try:
-            urls.update(
-                {
-                    "detail_url": reverse(
-                        "site:%s_%s_detalle" % self.get_info(), args=[slug_or_pk]
-                    )
-                }
-            )
+            url_name = self.site.get_url_name("detail")
+            urls.update({"detail_url": reverse(url_name, args=[slug_or_pk])})
         except NoReverseMatch:
-            pass
+            print("Url not found: %s" % url_name)
 
         try:
-            urls.update(
-                {
-                    "delete_url": reverse(
-                        "site:%s_%s_eliminar" % self.get_info(), args=[slug_or_pk]
-                    )
-                }
-            )
+            url_name = self.site.get_url_name("delete")
+            urls.update({"delete_url": reverse(url_name, args=[slug_or_pk])})
         except NoReverseMatch:
-            pass
+            print("Url not found: %s" % url_name)
 
         return urls
 
@@ -135,17 +99,12 @@ class BaseView:
 class ModuleView(TemplateView):
     """Clase para definir las vistas de los módulos de aplicaciones"""
 
-    app_name = None
-    app_label = None
-    template_name = None
-    models = None
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx.update({"apps": get_apps_from_module(self.module_name)})
-        ctx.update({"models_permissions": get_apps(self.module_name)})
-        ctx.update({"module_label": self.module_label})
-        return ctx
+    def get_template_names(self):
+        template_name = "hydra/module_list.html"
+        if hasattr(settings, "MODULE_TEMPLATE_NAME"):
+            template_name = settings.MODULE_TEMPLATE_NAME
+        return [template_name]
+        
 
     #
     # def has_permission(self):
@@ -158,6 +117,7 @@ class ModuleView(TemplateView):
     #         permissions.append(f"{model._meta.app_label}.view_{model._meta.model_name}")
     #     return any(user.has_perm(permission) for permission in permissions)
 
+    
 
 def get_app_view(**kwargs):
     """Obtiene la vista de la aplicación"""

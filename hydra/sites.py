@@ -9,7 +9,7 @@ from .forms import MenuForm
 # Model Site
 from hydra import ModelSite
 
-class AccountSite(ModelSite):
+class MenuSite(ModelSite):
     """Site for menu model"""
 
     model = Menu

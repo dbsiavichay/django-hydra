@@ -45,18 +45,16 @@ class FieldsetsModelForm(BaseModelForm, metaclass=ModelFormMetaclass):
                 fields.append(fieldset)
         return tuple(fields)
 
-    def get_sets(self):
+    def get_fieldsets(self):
         sets = list()
         for fieldset in self._meta.fieldsets:
             if isinstance(fieldset, tuple):
                 sets.append({
-                    'count': len(fieldset),
                     'bs_cols': int(12 / len(fieldset)),
                     'fields': [self[field] for field in fieldset]
                 })
             else:
                 sets.append({
-                    'count': 1,
                     'bs_cols': 12,
                     'fields': [self[fieldset]]
                 })

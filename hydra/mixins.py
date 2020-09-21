@@ -37,7 +37,7 @@ class FormsetMixin:
             if formset.is_valid():
                 formset.instance = self.object
                 formset.save()
-        return redirect(self.get_succes_url())
+        return redirect(self.get_success_url())
 
     def get_formset(self):
         """Function to get formset"""
@@ -63,9 +63,9 @@ class MultipleFormsetMixin:
 
         try:
             with transaction.atomic():
-                self.object = form.save(commit=False)
+                self.object = form.save()
                 self.save_formsets()
-            return redirect(self.get_succes_url())
+            return redirect(self.get_success_url())
         except IntegrityError:
             return self.form_invalid(form)
     

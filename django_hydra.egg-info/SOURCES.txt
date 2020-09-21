@@ -9,7 +9,6 @@ django_hydra.egg-info/top_level.txt
 hydra/__init__.py
 hydra/admin.py
 hydra/apps.py
-hydra/base.py
 hydra/context_processors copy.py
 hydra/context_processors.py
 hydra/forms.py
@@ -17,8 +16,16 @@ hydra/mixins.py
 hydra/models.py
 hydra/sites.py
 hydra/tests.py
+hydra/urls.py
 hydra/utils.py
 hydra/views.py
+hydra/base/__init__.py
+hydra/base/base.py
+hydra/base/create.py
+hydra/base/delete.py
+hydra/base/detail.py
+hydra/base/list.py
+hydra/base/update.py
 hydra/migrations/0001_menu.py
 hydra/migrations/__init__.py
 hydra/migrations/unaccent_extension.py

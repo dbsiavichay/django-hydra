@@ -37,6 +37,7 @@ def get_installed_apps():
     apps = (app for app in djangoapps.get_app_configs())
     return apps
 
+"""
 
 def get_apps_from_module(module_name):
     apps = (app for app in get_installed_apps() if module_name in app.name)
@@ -94,6 +95,40 @@ def get_apps(module_name):
         modelos = modelos + get_models(app.name)
     return modelos
 
+
+def get_modules():
+
+    path = settings.SETTINGS_MODULE.split(".")[0]
+    try:
+        from .views import ModuleView
+
+        mod = import_module(path + ".views")
+        views = (
+            cls
+            for name, cls in inspect.getmembers(mod)
+            if inspect.isclass(cls)
+            and issubclass(cls, ModuleView)
+            and not cls == ModuleView
+        )
+        modules = []
+
+        for view in views:
+            modules.append(
+                {"module": view.module_name, "apps": get_apps(view.module_name)}
+            )
+
+    except ModuleNotFoundError as error:
+        pass
+    return modules
+
+
+def get_model(app_name):
+    sites = inspect_sites(app_name)
+    modelos = list()
+    for site in sites:
+        modelos.append(site.model)
+    return modelos
+"""
 
 def get_field_label_of_model(model, field):
     names = field.split(".")
@@ -153,43 +188,21 @@ def get_attribute_of_instance(instance, field):
     return attr() if callable(attr) else attr
 
 
-def get_modules():
-    """Obtener la lista de módulos"""
-
-    path = settings.SETTINGS_MODULE.split(".")[0]
-    try:
-        from .views import ModuleView
-
-        mod = import_module(path + ".views")
-        views = (
-            cls
-            for name, cls in inspect.getmembers(mod)
-            if inspect.isclass(cls)
-            and issubclass(cls, ModuleView)
-            and not cls == ModuleView
-        )
-        modules = []
-
-        for view in views:
-            modules.append(
-                {"module": view.module_name, "apps": get_apps(view.module_name)}
-            )
-
-    except ModuleNotFoundError as error:
-        pass
-    return modules
-
-
-def get_model(app_name):
-    sites = inspect_sites(app_name)
-    modelos = list()
-    for site in sites:
-        modelos.append(site.model)
-    return modelos
-
-
 def get_model_info(model_class):
     """Obtiene la información de la clase"""
     info = model_class._meta.app_label, model_class._meta.model_name
     # info = self.model._meta.app_label, slugify(self.model._meta.verbose_name)
     return info
+
+def import_class(module_name, class_name):
+    cls = None
+    try:
+        module = import_module(module_name)
+        members = inspect.getmembers(module)
+        for name, klass in members:
+            if name == class_name:
+                cls = klass
+                break
+    except ModuleNotFoundError as error:
+        print("Not found %s" % module_name)
+    return cls

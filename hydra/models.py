@@ -6,9 +6,10 @@ from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
 from django.contrib.contenttypes.models import ContentType
 from django.apps import apps
+from django.utils.text import slugify
 
-# Utilities
-from .utils import get_model_info
+# Hydra
+from . import site
 
 
 class Menu(models.Model):
@@ -44,17 +45,19 @@ class Menu(models.Model):
         ordering = ('route', 'sequence')
 
     def __str__(self):
-        return f'{self.parent}/{self.name}' if self.parent else self.name
+        res = f'{self.parent}/{slugify(self.name)}' if self.parent else slugify(self.name)
+        return res
 
     def get_url(self):
         model_class = self.content_type.model_class() if self.content_type else self.content_type
         url = '#'
         if model_class:
-            info = get_model_info(model_class)
+            if not model_class in site._registry: return url
+            model_site = site._registry[model_class]
             try:
-                url = reverse('site:%s_%s_list' % info)
+                url = reverse(model_site.get_url_name("list"))
             except NoReverseMatch:
-                pass
+                print("Not found url for %s" % model_site.get_url_name("list"))
              
         return url
 
@@ -65,7 +68,7 @@ def map():
     for app in configs:
         menu = Menu.objects.create(
             name = app.verbose_name.capitalize(),
-            route = app.verbose_name,
+            route = slugify(app.verbose_name),
             sequence = sequence
         )
         sequence += 1
