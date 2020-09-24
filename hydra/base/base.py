@@ -235,13 +235,16 @@ class Site:
 
             if model in self._registry:
                 raise Exception('The model %s is already registered' % model.__name__)
-
-            Menu = import_class("hydra.models", "Menu")
-            ContentType = import_class("django.contrib.contenttypes.models", "ContentType")
-            content_type = ContentType.objects.get_for_model(model)
-            routes = Menu.objects.filter(content_type=content_type).values_list("route", flat=True)
-            site_class.routes = routes
-            print("Call to db Menus routes")
+            
+            try:
+                Menu = import_class("hydra.models", "Menu")
+                ContentType = import_class("django.contrib.contenttypes.models", "ContentType")
+                content_type = ContentType.objects.get_for_model(model)
+                routes = Menu.objects.filter(content_type=content_type).values_list("route", flat=True)
+                site_class.routes = routes
+                print("Call to db Menus routes")
+            except:
+                print("Erro no se pudo obtner las ruta")
 
             self._registry[model] = site_class()
 

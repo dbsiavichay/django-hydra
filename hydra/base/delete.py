@@ -9,7 +9,15 @@ from hydra.views import BaseView
 # Mixins
 #from hydra.mixins import MultiplePermissionRequiredModelMixin
 
-class View(BaseView, GenericDeleteView):
+        
+
+class DeleteView(GenericView):
+    site = None
+
+    def view(self, request, *args, **kwargs):
+        """ Crear la List View del modelo """
+        # Class
+        class View(BaseView, GenericDeleteView):
             """Definimos la clase que utilizará el modelo"""
 
             """
@@ -50,12 +58,6 @@ class View(BaseView, GenericDeleteView):
                 )
                 return context
 
-
-class DeleteView(GenericView):
-    site = None
-
-    def view(self, request, *args, **kwargs):
-        """ Crear la List View del modelo """
         
         # Set attribures
         View.site = self.site

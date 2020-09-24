@@ -9,35 +9,36 @@ from hydra.views import BaseView
 # Mixins
 #from hydra.mixins import MultiplePermissionRequiredModelMixin
 
-class View(BaseView, GenericUpdateView):
-    """Update View del modelo"""
-
-    """
-    permission_autosite = (
-        f'{self.model._meta.app_label}.change_{self.model._meta.model_name}',
-    )
-    permission_required = permission_autosite + self.permission_extra
-    """
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update(
-            {
-                'site': {
-                    'breadcumbs': self.get_update_breadcrumbs()
-                }
-            }
-        )
-        return context
-
-    def get_success_url(self):
-        return self._get_action_urls(instance=self.object).get('detail_url')
-
 
 class UpdateView(GenericView):
     site = None
 
     def view(self, request, *args, **kwargs):
         """ Crear la List View del modelo """
+        # Class
+        class View(BaseView, GenericUpdateView):
+            """Update View del modelo"""
+
+            """
+            permission_autosite = (
+                f'{self.model._meta.app_label}.change_{self.model._meta.model_name}',
+            )
+            permission_required = permission_autosite + self.permission_extra
+            """
+            def get_context_data(self, **kwargs):
+                context = super().get_context_data(**kwargs)
+                context.update(
+                    {
+                        'site': {
+                            'breadcumbs': self.get_update_breadcrumbs()
+                        }
+                    }
+                )
+                return context
+
+            def get_success_url(self):
+                return self._get_action_urls(instance=self.object).get('detail_url')
+
         
         # Set attribures
         View.site = self.site

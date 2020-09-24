@@ -24,7 +24,11 @@ class Menu(models.Model):
         verbose_name='menú padre'
     )
     name = models.CharField(max_length=128, verbose_name='nombre')
-    route = models.CharField(max_length=512, verbose_name='ruta')
+    route = models.CharField(
+        max_length=512, 
+        unique = True,
+        verbose_name='ruta'
+    )
     content_type = models.ForeignKey(
         'contenttypes.ContentType',
         blank = True,
@@ -60,6 +64,7 @@ class Menu(models.Model):
                 print("Not found url for %s" % model_site.get_url_name("list"))
              
         return url
+
 
 def map():
     Menu.objects.all().delete()

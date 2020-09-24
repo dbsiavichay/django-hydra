@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=128, verbose_name='nombre')),
-                ('route', models.CharField(max_length=512, verbose_name='ruta')),
+                ('route', models.CharField(max_length=512, unique=True, verbose_name='ruta')),
                 ('icon_class', models.CharField(blank=True, max_length=128, null=True, verbose_name='clase css del ícono')),
                 ('sequence', models.PositiveSmallIntegerField(verbose_name='secuencia')),
                 ('is_active', models.BooleanField(default=True, verbose_name='activo?')),

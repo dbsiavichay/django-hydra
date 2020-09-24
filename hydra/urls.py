@@ -13,17 +13,20 @@ def get_module_urls():
     Menu = import_class("hydra.models", "Menu")
     if Menu is None:
         print("Not found Menu")
-        return
+        return urlspatterns
     
-    menus = Menu.objects.filter(content_type__isnull=True)
-    
-    for menu in menus:
-        urlspatterns.append(
-            path(
-                route = "%s/" % menu.route,
-                view = ModuleView.as_view(),
-                name = slugify(menu.name)
-            )
-        ) 
+    try:
+        menus = Menu.objects.filter(content_type__isnull=True)
+        
+        for menu in menus:
+            urlspatterns.append(
+                path(
+                    route = "%s/" % menu.route,
+                    view = ModuleView.as_view(),
+                    name = slugify(menu.name)
+                )
+            ) 
+    except:
+        pass
     return urlspatterns
 

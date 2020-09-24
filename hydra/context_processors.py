@@ -5,7 +5,7 @@ from hydra.models import Menu
 
 def menu(request):
     return {
-        'menu_list': build_menu(),
+        'menu_items': build_menu(),
     }
 
 

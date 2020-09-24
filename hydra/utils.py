@@ -1,13 +1,16 @@
+#Python
 import inspect
 import json
-
 from importlib import import_module
 
+# Django
 from django.core.exceptions import FieldDoesNotExist
 from django.forms.utils import pretty_name
 from django.conf import settings
 from django.apps import apps as djangoapps
 from django.urls import reverse_lazy, reverse, NoReverseMatch
+from django.db.migrations.executor import MigrationExecutor
+from django.db import connections, DEFAULT_DB_ALIAS
 
 
 def inspect_sites(app):
@@ -206,3 +209,6 @@ def import_class(module_name, class_name):
     except ModuleNotFoundError as error:
         print("Not found %s" % module_name)
     return cls
+
+def check_migrations(db_alias):
+    pass

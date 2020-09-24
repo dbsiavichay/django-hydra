@@ -91,7 +91,6 @@ class MultipleFormsetMixin:
                 formset.save()
 
 
-
 class MultiplePermissionRequiredModuleMixin(PermissionRequiredMixin):
     """Verifica los permisos de acceso al módulo"""
 
