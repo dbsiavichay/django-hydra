@@ -6,9 +6,9 @@
 from django.utils.text import slugify
 #from django.core.exceptions import FieldDoesNotExist, ImproperlyConfigured
 from django.db.models.base import ModelBase
+from django.db.utils import ProgrammingError
 #from django.forms.utils import pretty_name
 from django.urls import path, include #reverse_lazy, reverse
-from django.utils.html import format_html
 
 # Hydra
 from hydra.urls import get_module_urls
@@ -22,7 +22,7 @@ from .detail import DetailView
 from .delete import DeleteView
 
 # Utils
-from hydra.utils import import_class
+from hydra.utils import import_class, check_migrations_were_applied
 
 ALL_FIELDS = "__all__"
 
@@ -49,6 +49,9 @@ class ModelSite:
     form_mixins = () # List of mixins that Hydra include in Create and Update Views
     detail_mixins = () # List of mixins that Hydra include in DetailViews
 
+    # Prepopulate
+    prepopulate_slug = ()
+
     # Permissions
     permission_extra = ()
     
@@ -66,9 +69,6 @@ class ModelSite:
     url_update_suffix = "update"
     url_detail_suffix = "detail"
     url_delete_suffix = "delete"
-
-    # Routes
-    routes = ()
 
     # Breadcrumbs
     breadcrumb_home_text = "Home"
@@ -88,6 +88,7 @@ class ModelSite:
         info = slugify(cls.model._meta.app_config.verbose_name), slugify(cls.model._meta.verbose_name)
         return info
 
+    # Url methods
     @classmethod
     def get_base_url_name(cls, suffix):
         info = cls.get_info()
@@ -100,12 +101,7 @@ class ModelSite:
         url_name = "site:%s" % cls.get_base_url_name(suffix)
         return url_name
 
-    def get_breadcrumb_text(self, name):
-        text = getattr(self, "breadcrumb_%s_text" % name)
-        if not text: return None
-        return format_html(text)
-
-    def get_urls(self, route):
+    def get_urls(self):
         """Genera las urls para los modelos registrados"""
 
         # def wrap(view):
@@ -123,7 +119,7 @@ class ModelSite:
             url_name = self.get_base_url_name("list")
             urlpatterns += [
                 path(
-                    route = f"{route}/", 
+                    route = "", 
                     view = ListView.as_view(site=self), 
                     name = url_name
                 )
@@ -135,17 +131,17 @@ class ModelSite:
 
             urlpatterns += [
                 path(
-                    route = f"{route}/{self.url_create_suffix}/", 
+                    route = f"{self.url_create_suffix}/", 
                     view = CreateView.as_view(site=self), 
                     name = url_create_name
                 ),
                 path(
-                    route = f"{route}/<int:pk>/{self.url_update_suffix}/", 
+                    route = f"<int:pk>/{self.url_update_suffix}/", 
                     view = UpdateView.as_view(site=self), 
                     name = url_update_name
                 ),
                 path(
-                    route = f"{route}/<slug:slug>/{self.url_update_suffix}/", 
+                    route = f"<slug:slug>/{self.url_update_suffix}/", 
                     view = UpdateView.as_view(site=self), 
                     name = url_update_name
                 ),
@@ -156,12 +152,12 @@ class ModelSite:
 
             urlpatterns += [
                 path(
-                    route = f"{route}/<int:pk>/{self.url_detail_suffix}/", 
+                    route = f"<int:pk>/{self.url_detail_suffix}/", 
                     view = DetailView.as_view(site=self), 
                     name = url_detail_name
                 ),
                 path(
-                    route = f"{route}/<slug:slug>/{self.url_detail_suffix}/", 
+                    route = f"<slug:slug>/{self.url_detail_suffix}/", 
                     view = DetailView.as_view(site=self), 
                     name = url_detail_name
                 ),
@@ -172,12 +168,12 @@ class ModelSite:
 
             urlpatterns += [
                 path(
-                    route = f"{route}/<int:pk>/{self.url_delete_suffix}/",
+                    route = f"<int:pk>/{self.url_delete_suffix}/",
                     view = DeleteView.as_view(site=self), 
                     name = url_delete_name
                 ),
                 path(
-                    route = f"{route}/<slug:slug>/{self.url_delete_suffix}/",
+                    route = f"<slug:slug>/{self.url_delete_suffix}/",
                     view = DeleteView.as_view(site=self),
                     name = url_delete_name,
                 ),
@@ -201,12 +197,7 @@ class ModelSite:
     @property
     def urls(self):
         """Retorna las urls creadas"""
-        urlpatterns = []
-        if not self.routes:
-            self.routes = ["%s/%s" % self.get_info()]
-        for route in self.routes:
-            urlpatterns.extend(self.get_urls(route))
-        return urlpatterns
+        return self.get_urls()
 
    
 class Site:
@@ -230,16 +221,6 @@ class Site:
 
             if model in self._registry:
                 raise Exception('The model %s is already registered' % model.__name__)
-            
-            try:
-                Menu = import_class("hydra.models", "Menu")
-                ContentType = import_class("django.contrib.contenttypes.models", "ContentType")
-                content_type = ContentType.objects.get_for_model(model)
-                routes = Menu.objects.filter(content_type=content_type).values_list("route", flat=True)
-                site_class.routes = routes
-                print("Call to db Menus routes")
-            except:
-                print("Erro no se pudo obtner las ruta")
 
             self._registry[model] = site_class()
 
@@ -264,8 +245,22 @@ class Site:
             #    url_format = "%s/%s/" % info
             #    urlpatterns += [path(url_format, include(model_site.urls))]
             #else:
-            urlpatterns.extend(model_site.urls)
 
+            try:
+                Menu = import_class("hydra.models", "Menu")
+                ContentType = import_class("django.contrib.contenttypes.models", "ContentType")
+                content_type = ContentType.objects.get_for_model(model)
+                menus = Menu.objects.filter(content_type=content_type)
+            except ProgrammingError as error:
+                menus = None
+
+            if menus:
+                for menu in menus:
+                    urlpatterns += [path(f"{menu.route}/", include(model_site.urls))]
+            else:
+                info = model_site.get_info()                
+                url_format = "%s/%s/" % info
+                urlpatterns += [path(url_format, include(model_site.urls))]
         return urlpatterns
 
     @property

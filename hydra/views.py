@@ -2,6 +2,9 @@
 from django.views.generic import TemplateView
 from django.conf import settings
 
+# Mixins
+from hydra.base.mixins import BreadcrumbMixin, UrlMixin, TemplateMixin
+
 
 class ModuleView(TemplateView):
     """Clase para definir las vistas de los módulos de aplicaciones"""
@@ -12,6 +15,13 @@ class ModuleView(TemplateView):
             template_name = settings.MODULE_TEMPLATE_NAME
         return [template_name]
         
+def get_base_view(View, Mixin, site):
+    class View(BreadcrumbMixin, UrlMixin, TemplateMixin, Mixin, View):
+        pass
+
+    View.site = site
+    View.model = site.model
+    return View
 
     #
     # def has_permission(self):

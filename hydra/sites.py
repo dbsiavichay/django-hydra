@@ -14,4 +14,4 @@ class MenuSite(ModelSite):
 
     model = Menu
     form_class = MenuForm
-    list_display = ('__str__', 'content_type', 'icon_class', 'sequence')
+    list_fields = ("name", "route","content_type", "sequence")

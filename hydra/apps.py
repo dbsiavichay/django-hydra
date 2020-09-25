@@ -13,6 +13,7 @@ class HydraConfig(AppConfig):
 
     def ready(self):
         super().ready()
+        from . import signals
         autodiscover()
 
 

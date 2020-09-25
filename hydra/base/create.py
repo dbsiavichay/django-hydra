@@ -3,48 +3,41 @@
 import copy
 
 # Django
-from django.views.generic import View as GenericView
+from django.views.generic import View
 from django.views.generic import CreateView as BaseCreateView
 
 # Mixins
-from .mixins import BreadcrumbMixin
+#from .mixins import BreadcrumbMixin, TemplateMixin
 #from hydra.mixins import MultiplePermissionRequiredModelMixin
 
+# Hydra
+from hydra.views import get_base_view
+from hydra.shortcuts import get_urls_of_site
 
-class CreateView(GenericView):
+class CreateMixin:
+    """Definimos la clase que utilizará el modelo"""
+
+    """
+    permission_autosite = (
+        f'{self.model._meta.app_label}.add_{self.model._meta.model_name}',
+    )
+    permission_required = permission_autosite + self.permission_extra
+    """
+
+    keyword = "create"
+
+    def get_success_url(self):
+        return get_url_of_site(self.site, self.object).get('detail_url')
+
+class CreateView(View):
     site = None
 
     def view(self, request, *args, **kwargs):
         """ Crear la List View del modelo """
         # Class
-        class View(BreadcrumbMixin, BaseCreateView):
-            """Definimos la clase que utilizará el modelo"""
+        View = get_base_view(BaseCreateView, CreateMixin, self.site)
 
-            """
-            permission_autosite = (
-                f'{self.model._meta.app_label}.add_{self.model._meta.model_name}',
-            )
-            permission_required = permission_autosite + self.permission_extra
-            """
-
-            def get_context_data(self, **kwargs):
-                context = super().get_context_data(**kwargs)
-                context.update(
-                    {
-                        'site': {
-                            'breadcumbs': self.get_create_breadcrumbs()
-                        }
-                    }
-                )
-                return context
-
-            def get_success_url(self):
-                return self._get_action_urls(instance=self.object).get('detail_url')
-
-        # Set attribures
-        View.site = self.site
-        View.model = self.site.model
-        View.template_name = self.site.form_template_name
+        # Set attributes
         View.form_class = self.site.form_class
         View.fields = self.site.fields
 

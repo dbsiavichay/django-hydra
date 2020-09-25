@@ -13,6 +13,7 @@ from django.db.migrations.executor import MigrationExecutor
 from django.db import connections, DEFAULT_DB_ALIAS
 
 
+
 def inspect_sites(app):
     from . import ModelSite
     results = inspect_clases(f"{app}.sites", ModelSite)
@@ -191,12 +192,6 @@ def get_attribute_of_instance(instance, field):
     return attr() if callable(attr) else attr
 
 
-def get_model_info(model_class):
-    """Obtiene la información de la clase"""
-    info = model_class._meta.app_label, model_class._meta.model_name
-    # info = self.model._meta.app_label, slugify(self.model._meta.verbose_name)
-    return info
-
 def import_class(module_name, class_name):
     cls = None
     try:
@@ -210,5 +205,11 @@ def import_class(module_name, class_name):
         print("Not found %s" % module_name)
     return cls
 
-def check_migrations(db_alias):
-    pass
+def check_migrations_were_applied(db_alias):
+    connection = connections[db_alias]
+    connection.prepare_database()
+    executor = MigrationExecutor(connection)
+    targets = executor.loader.graph.leaf_nodes()
+    return not executor.migration_plan(targets)
+
+
