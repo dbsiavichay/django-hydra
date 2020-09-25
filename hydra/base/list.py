@@ -5,18 +5,17 @@ from functools import reduce
 
 # Django
 from django.views.generic import View as GenericView
-from django.views.generic import ListView as GenericListView
-
-# Views
-from hydra.views import BaseView
+from django.views.generic import ListView as BaseListView
 
 # Mixins
+from .mixins import BreadcrumbMixin
 #from hydra.mixins import MultiplePermissionRequiredModelMixin
 
 # Utilities
 from hydra.utils import (
     get_field_label_of_model,
     get_attribute_of_instance,
+    import_class
 )
 
 
@@ -26,7 +25,7 @@ class ListView(GenericView):
     def view(self, request, *args, **kwargs):
         """ Crear la List View del modelo """
         # Class
-        class View(BaseView, GenericListView):
+        class View(BreadcrumbMixin, BaseListView):
             """Definimos la clase que utilizará el modelo"""
 
             """
@@ -87,7 +86,7 @@ class ListView(GenericView):
                 return queryset
 
             def _get_headers(self):
-                for name in self.list_display:
+                for name in self.site.list_fields:
                     yield get_field_label_of_model(self.model, name)
 
             def _get_rows(self, queryset):
@@ -100,7 +99,7 @@ class ListView(GenericView):
                     yield row
 
             def _get_values(self, instance):
-                for name in self.list_display:
+                for name in self.site.list_fields:
                     value = get_attribute_of_instance(instance, name)
                     yield value
 
@@ -144,7 +143,6 @@ class ListView(GenericView):
         View.queryset = self.site.queryset
         View.template_name = self.site.list_template_name
         View.paginate_by = self.site.paginate_by
-        View.list_display = self.site.list_display
 
         View.__bases__ = tuple({*self.site.list_mixins, *View.__bases__})
 

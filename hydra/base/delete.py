@@ -1,12 +1,10 @@
 """ """
 # Django
 from django.views.generic import View as GenericView
-from django.views.generic import DeleteView as GenericDeleteView
-
-# Views
-from hydra.views import BaseView
+from django.views.generic import DeleteView as BaseDeleteView
 
 # Mixins
+from .mixins import BreadcrumbMixin
 #from hydra.mixins import MultiplePermissionRequiredModelMixin
 
         
@@ -17,7 +15,7 @@ class DeleteView(GenericView):
     def view(self, request, *args, **kwargs):
         """ Crear la List View del modelo """
         # Class
-        class View(BaseView, GenericDeleteView):
+        class View(BreadcrumbMixin, BaseDeleteView):
             """Definimos la clase que utilizará el modelo"""
 
             """

@@ -1,12 +1,11 @@
 """ """
 # Django
 from django.views.generic import View as GenericView
-from django.views.generic import UpdateView as GenericUpdateView
+from django.views.generic import UpdateView as BaseUpdateView
 
-# Views
-from hydra.views import BaseView
 
 # Mixins
+from .mixins import BreadcrumbMixin
 #from hydra.mixins import MultiplePermissionRequiredModelMixin
 
 
@@ -16,7 +15,7 @@ class UpdateView(GenericView):
     def view(self, request, *args, **kwargs):
         """ Crear la List View del modelo """
         # Class
-        class View(BaseView, GenericUpdateView):
+        class View(BreadcrumbMixin, BaseUpdateView):
             """Update View del modelo"""
 
             """

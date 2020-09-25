@@ -1,8 +1,5 @@
 """Classes and functios for register site models"""
 
-import operator
-from functools import reduce
-
 # Django
 #from django.db.models import Q
 #from django.shortcuts import redirect
@@ -13,18 +10,11 @@ from django.db.models.base import ModelBase
 from django.urls import path, include #reverse_lazy, reverse
 from django.utils.html import format_html
 
-# Utilities
-#from hydra.utils import (
-    #get_project_path,
-    #inspect_clases,
-    #get_installed_apps,
-#)
-
+# Hydra
 from hydra.urls import get_module_urls
 
 
 # Views
-from hydra.views import BaseView, ModuleView, get_app_view
 from .list import ListView
 from .create import CreateView
 from .update import UpdateView
@@ -34,6 +24,7 @@ from .delete import DeleteView
 # Utils
 from hydra.utils import import_class
 
+ALL_FIELDS = "__all__"
 
 class ModelSite:
     """Superclass that generate CRUD Views for any model"""
@@ -43,8 +34,8 @@ class ModelSite:
     form_class = None # Used for create Create and Update views
     fields = None # User for passed to Create and Update views for generate forms
     fieldsets = () # Used for generate group of fields
-    list_display = ("__str__",) # Used for create ListView with de specified fields
-    detail_display = () # Used for create DetailView with specified fields
+    list_fields = ("__str__",) # Used for create ListView with de specified fields
+    detail_fields = () # Used for create DetailView with specified fields
     views_display = "list", "form", "detail", "delete" # Says Hydra which views create
 
     # Templates
@@ -85,6 +76,10 @@ class ModelSite:
     breadcrumb_update_text = "Update"
     breadcrumb_detail_text = None
     breadcrumb_delete_text = "Delete"
+
+    def __init__(self, **kwargs):
+        if not self.form_class and not self.fields:
+            self.fields = ALL_FIELDS
 
     @classmethod
     def get_info(cls):

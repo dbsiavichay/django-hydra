@@ -4,13 +4,12 @@ import copy
 
 # Django
 from django.views.generic import View as GenericView
-from django.views.generic import CreateView as GenericCreateView
-
-# Views
-from hydra.views import BaseView
+from django.views.generic import CreateView as BaseCreateView
 
 # Mixins
+from .mixins import BreadcrumbMixin
 #from hydra.mixins import MultiplePermissionRequiredModelMixin
+
 
 class CreateView(GenericView):
     site = None
@@ -18,7 +17,7 @@ class CreateView(GenericView):
     def view(self, request, *args, **kwargs):
         """ Crear la List View del modelo """
         # Class
-        class View(BaseView, GenericCreateView):
+        class View(BreadcrumbMixin, BaseCreateView):
             """Definimos la clase que utilizará el modelo"""
 
             """

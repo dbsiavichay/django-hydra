@@ -1,12 +1,10 @@
 """ """
 # Django
 from django.views.generic import View as GenericView
-from django.views.generic import DetailView as GenericDetailView
-
-# Views
-from hydra.views import BaseView
+from django.views.generic import DetailView as BaseDetailView
 
 # Mixins
+from .mixins import BreadcrumbMixin
 #from hydra.mixins import MultiplePermissionRequiredModelMixin
 
 from hydra.utils import (
@@ -21,7 +19,7 @@ class DetailView(GenericView):
     def view(self, request, *args, **kwargs):
         """ Crear la List View del modelo """
         # Class
-        class View(BaseView, GenericDetailView):
+        class View(BreadcrumbMixin, BaseDetailView):
             """Definimos la clase que utilizará el modelo"""
 
             """
@@ -50,8 +48,8 @@ class DetailView(GenericView):
 
             def _get_results(self):
                 fields = (
-                    self.site.detail_display
-                    if self.site.detail_display
+                    self.site.detail_fields
+                    if self.site.detail_fields
                     else (field.name for field in self.model._meta.fields)
                 )
                 for field in fields:
@@ -60,7 +58,7 @@ class DetailView(GenericView):
                     yield (label, value)
 
 
-        # Set attribures
+        # Set attributes
         View.site = self.site
         View.model = self.site.model
         View.template_name = self.site.detail_template_name
