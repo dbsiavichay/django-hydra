@@ -144,7 +144,7 @@ class ListView(GenericView):
         View.template_name = self.site.list_template_name
         View.paginate_by = self.site.paginate_by
 
-        View.__bases__ = tuple({*self.site.list_mixins, *View.__bases__})
+        View.__bases__ = (*self.site.list_mixins, *View.__bases__)
 
         view = View.as_view()
         return view(request, *args, **kwargs)

@@ -57,14 +57,12 @@ class DetailView(GenericView):
                     value = get_attribute_of_instance(self.object, field)
                     yield (label, value)
 
-
         # Set attributes
         View.site = self.site
         View.model = self.site.model
         View.template_name = self.site.detail_template_name
 
-        for mixin in self.site.detail_mixins:
-            View.__bases__ = (mixin,) + View.__bases__
+        View.__bases__ = (*self.site.detail_mixins, *View.__bases__) 
 
         view = View.as_view()
         return view(request, *args, **kwargs)

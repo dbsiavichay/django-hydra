@@ -46,7 +46,7 @@ class UpdateView(GenericView):
         View.form_class = self.site.form_class
         View.fields = self.site.fields
 
-        View.__bases__ = tuple({*self.site.form_mixins, *View.__bases__})
+        View.__bases__ = (*self.site.form_mixins, *View.__bases__)
 
         view = View.as_view()
         return view(request, *args, **kwargs)
