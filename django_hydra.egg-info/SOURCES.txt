@@ -1,5 +1,5 @@
 MANIFEST.in
-README.rst
+README.md
 setup.cfg
 setup.py
 django_hydra.egg-info/PKG-INFO
@@ -9,11 +9,12 @@ django_hydra.egg-info/top_level.txt
 hydra/__init__.py
 hydra/admin.py
 hydra/apps.py
-hydra/context_processors copy.py
 hydra/context_processors.py
 hydra/forms.py
 hydra/mixins.py
 hydra/models.py
+hydra/shortcuts.py
+hydra/signals.py
 hydra/sites.py
 hydra/tests.py
 hydra/urls.py
@@ -25,6 +26,7 @@ hydra/base/create.py
 hydra/base/delete.py
 hydra/base/detail.py
 hydra/base/list.py
+hydra/base/mixins.py
 hydra/base/update.py
 hydra/migrations/0001_menu.py
 hydra/migrations/__init__.py
