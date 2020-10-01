@@ -1,8 +1,4 @@
 """ Hydra list view """
-# Python
-import operator
-from functools import reduce
-
 # Django
 from django.views.generic import View
 from django.views.generic import ListView as BaseListView
@@ -16,8 +12,8 @@ from hydra.shortcuts import get_urls_of_site
 
 # Utilities
 from hydra.utils import (
-    get_field_label_of_model,
-    get_attribute_of_instance,
+    get_label_of_field,
+    get_attr_of_object,
 )
 
 
@@ -40,15 +36,11 @@ class ListMixin:
 
         opts = {
             "model_verbose_name_plural": self.model._meta.verbose_name_plural,
-            "model": self.model,
-            "order_by": self._get_headers(),
-            "header_list": self._get_headers(),
-            "row_list": self._get_rows(context["object_list"]),
-            "count_list_start":context["page_obj"].start_index() if context["paginator"] else 1,
-            "count_list_end":context["page_obj"].end_index() if context["paginator"] else context["object_list"].count(),
-            "count_list": context["paginator"].count if context["paginator"] else context["object_list"].count(),
-            "search_fields": self._get_search_fields_with_labels(),
-            "active_searches": self._clean_search_params(),
+            "headers": self.get_headers(),
+            "rows": self.get_rows(context["object_list"]),
+            "page_start_index":context["page_obj"].start_index() if context["is_paginated"] else 1,
+            "page_end_index":context["page_obj"].end_index() if context["is_paginated"] else context["object_list"].count(),
+            "total_records": context["paginator"].count if context["is_paginated"] else context["object_list"].count(),
         }
 
         if "site" in context:
@@ -60,83 +52,25 @@ class ListMixin:
     
         return context
 
-    def reduce_queryset(self, params, queryset, op):
-        args = []
-        for field, value, verbose_name in params:
-            action = '__icontains'
-            if self.model._meta.get_field(field).__class__.__name__ in (
-                'CharField',
-                'TextField',
-            ):
-                action = '__unaccent' + action
-            args.append(Q(**{field + action: value}))
-        if args:
-            queryset = queryset.filter(reduce(op, args))
-        return queryset
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-
-        params = self._clean_search_params()
-        if 'sf' in self.request.GET:
-            return self.reduce_queryset(params, queryset, operator.__or__)
-
-        queryset = self.reduce_queryset(params, queryset, operator.__and__)
-        return queryset
-
-    def _get_headers(self):
+    def get_headers(self):
         for name in self.site.list_fields:
-            yield get_field_label_of_model(self.model, name)
+            yield get_label_of_field(self.model, name)
 
-    def _get_rows(self, queryset):
+    def get_rows(self, queryset):
         for instance in queryset:
             urls = get_urls_of_site(self.site, instance)
             row = {
-                'values_list': self._get_values(instance),
+                "instance": instance,
+                "values": self.get_values(instance),
                 **urls,
             }
 
             yield row
 
-    def _get_values(self, instance):
+    def get_values(self, instance):
         for name in self.site.list_fields:
-            value = get_attribute_of_instance(instance, name)
+            value = get_attr_of_object(instance, name)
             yield value
-
-    ###Searching
-    def _clean_search_params(self):
-        params = []
-        if 'sf' in self.request.GET:
-            value = self.request.GET.get('sf')
-            for field in self.site.search_fields:
-                verbose_name = get_field_label_of_model(
-                    self.site.model, '.'.join(field.split('__'))
-                )
-                params.append((field, value, verbose_name))
-            return params
-
-        for key in self.request.GET.keys():
-            if key.startswith('sf_') and key[3:] in self.site.search_fields:
-                field = key[3:]
-                verbose_name = get_field_label_of_model(
-                    self.site.model, '.'.join(field.split('__'))
-                )
-                params.append((field, self.request.GET.get(key), verbose_name))
-        return params
-
-    def _get_search_fields_with_labels(self):
-        fields = []
-        for field in self.site.search_fields:
-            point_field = '.'.join(field.split('__'))
-            fields.append(
-                (
-                    f'sf_{field}',
-                    get_field_label_of_model(self.model, point_field),
-                )
-            )
-        return fields
-
-
 
 class ListView(View):
     site = None

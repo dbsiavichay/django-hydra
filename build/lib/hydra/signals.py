@@ -17,7 +17,7 @@ from hydra import site
 from hydra.models import Menu
 
 # Utils
-from hydra.utils import get_attribute_of_instance
+from hydra.utils import get_attr_of_object
 
 
 
@@ -48,7 +48,7 @@ def prepopulate_slug(sender, instance, **kwargs):
             raise ImproperlyConfigured(f"Model '{model_name}' has no field'{str(field)}'")
 
     
-    fields = (get_attribute_of_instance(instance, field) for field in slug_fields)
+    fields = (get_attr_of_object(instance, field) for field in slug_fields)
     slug = " ".join(fields)
     instance.slug = slugify(slug)
 

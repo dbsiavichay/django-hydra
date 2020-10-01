@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: django-hydra
-Version: 0.3
+Version: 0.4
 Summary: Gives superpowers to Django Framework
 Home-page: https://github.com/dbsiavichay/django-hydra.git
 Author: Denis Siavichay

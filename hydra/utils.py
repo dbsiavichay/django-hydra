@@ -40,7 +40,7 @@ def get_installed_apps():
     return apps
 
 
-def get_field_label_of_model(model, field):
+def get_label_of_field(model, field):
     names = field.split(".")
     name = names.pop(0)
 
@@ -76,7 +76,7 @@ def get_field_label_of_model(model, field):
     return pretty_name(label)
 
 
-def get_attribute_of_instance(instance, field):
+def get_attr_of_object(instance, field):
     names = field.split(".")
     name = names.pop(0)
     name = name.split(":")[0]

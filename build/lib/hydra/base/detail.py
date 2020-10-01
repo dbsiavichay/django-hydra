@@ -11,8 +11,8 @@ from hydra.views import get_base_view
 from hydra.shortcuts import get_urls_of_site
 
 from hydra.utils import (
-    get_field_label_of_model,
-    get_attribute_of_instance,
+    get_label_of_field,
+    get_attr_of_object,
 )
 
 class DetailMixin:
@@ -53,8 +53,8 @@ class DetailMixin:
             else (field.name for field in self.model._meta.fields)
         )
         for field in fields:
-            label = get_field_label_of_model(self.object, field)
-            value = get_attribute_of_instance(self.object, field)
+            label = get_label_of_field(self.object, field)
+            value = get_attr_of_object(self.object, field)
             yield (label, value)
 
 

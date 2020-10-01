@@ -6,7 +6,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db import transaction, IntegrityError
 
 #Utils
-from .utils import get_field_label_of_model
+from .utils import get_label_of_field
 
 
 class FormsetMixin:
@@ -21,7 +21,7 @@ class FormsetMixin:
         """
         context = super().get_context_data(**kwargs)
         formset_headers = (
-            get_field_label_of_model(self.formset.form._meta.model, field_name) 
+            get_label_of_field(self.formset.form._meta.model, field_name) 
             for field_name in self.formset.form._meta.fields
         )
         context.update({
