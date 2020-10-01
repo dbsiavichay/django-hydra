@@ -8,6 +8,7 @@ from django.views.generic import DeleteView as BaseDeleteView
 
 # Hydra
 from hydra.views import get_base_view
+from hydra.shortcuts import get_urls_of_site
 
 class DeleteMixin:
     """Definimos la clase que utilizará el modelo"""
@@ -18,36 +19,25 @@ class DeleteMixin:
     )
     """
     action = "delete"
-    #success_url = reverse_lazy('site:%s_%s_list' % self.get_info())
-
-    def delete(self, request, *args, **kwargs):
-        delete_field = site.delete_field
-
-        if delete_field:
-            self.object = self.get_object()
-            if hasattr(self.object, delete_field):
-                setattr(self.object, delete_field, True)
-                self.object.save()
-            else:
-                raise ImproperlyConfigured(
-                    f'No existe el campo <{delete_field}> para {self.model._meta.model_name.capitalize()}'
-                )
-            return redirect(self.get_success_url())
-
-        return super().delete(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update(
-            {
-                'site': {
-                    'model_verbose_name_plural': self.model._meta.verbose_name_plural,
-                    # 'results': self._get_results(),
-                    **self._get_action_urls(instance=self.object),
-                }
-            }
-        )
+
+        opts = {
+            "model_verbose_name_plural": self.model._meta.verbose_name_plural,
+            **get_urls_of_site(self.site, self.object),
+        }
+
+        if "site" in context:
+            context["site"].update(opts)
+        else:
+            context.update({
+                "site": opts
+            })
         return context
+
+    def get_success_url(self):
+        return get_urls_of_site(self.site, self.object).get('list_url')
 
 
 class DeleteView(View):

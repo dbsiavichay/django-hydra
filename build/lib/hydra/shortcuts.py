@@ -12,6 +12,12 @@ def get_urls_of_site(site, object=None):
     slug_or_pk = get_slug_or_pk(object)
 
     try:
+        url_name = site.get_url_name("list")
+        urls.update({"list_url": reverse(url_name)})
+    except NoReverseMatch:
+        print("Url not found: %s" % url_name)
+
+    try:
         url_name = site.get_url_name("create")
         urls.update({"create_url": reverse(url_name)})
     except NoReverseMatch:
