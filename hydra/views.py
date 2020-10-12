@@ -1,9 +1,11 @@
 # Django
 from django.views.generic import TemplateView
 from django.conf import settings
+from django.urls import reverse
 
 # Mixins
 from hydra.base.mixins import BreadcrumbMixin, UrlMixin, TemplateMixin
+from hydra.shortcuts import get_urls_of_site
 
 
 class ModuleView(TemplateView):
@@ -17,7 +19,8 @@ class ModuleView(TemplateView):
         
 def get_base_view(View, Mixin, site):
     class View(BreadcrumbMixin, UrlMixin, TemplateMixin, Mixin, View):
-        pass
+        def get_success_url(self):
+            return get_urls_of_site(self.site).get(f"{self.site.success_url}_url")
 
     View.site = site
     View.model = site.model

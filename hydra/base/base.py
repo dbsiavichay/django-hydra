@@ -37,6 +37,7 @@ class ModelSite:
     list_fields = ("__str__",) # Used for create ListView with de specified fields
     detail_fields = () # Used for create DetailView with specified fields
     allow_views = "list", "create", "update", "detail", "delete" # Says Hydra which views create
+    success_url = "list"
 
     # Templates
     list_template_name = None # Says Hydra which list template use

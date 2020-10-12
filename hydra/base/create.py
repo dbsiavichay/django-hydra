@@ -26,9 +26,6 @@ class CreateMixin:
 
     action = "create"
 
-    def get_success_url(self):
-        return get_urls_of_site(self.site, self.object).get('detail_url')
-
 class CreateView(View):
     site = None
 

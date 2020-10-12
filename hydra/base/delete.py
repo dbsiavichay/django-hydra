@@ -36,9 +36,6 @@ class DeleteMixin:
             })
         return context
 
-    def get_success_url(self):
-        return get_urls_of_site(self.site, self.object).get('list_url')
-
 
 class DeleteView(View):
     site = None
