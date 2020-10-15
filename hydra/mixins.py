@@ -3,7 +3,7 @@
 # Django
 from django.shortcuts import redirect
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.db import transaction, IntegrityError
+from django.db import transaction
 
 #Utils
 from .utils import get_label_of_field
@@ -33,10 +33,14 @@ class FormsetMixin:
     def form_valid(self, form):
         formset = self.get_formset()
         with transaction.atomic():
-            self.object = form.save()
             if formset.is_valid():
+                self.object = form.save()
                 formset.instance = self.object
                 formset.save()
+            else:
+                for error in formset.errors:
+                    form.errors.update({**error})
+                return self.form_invalid(form)
         return redirect(self.get_success_url())
 
     def get_formset(self):
@@ -58,16 +62,21 @@ class MultipleFormsetMixin:
 
     
     def form_valid(self, form):
-        if not self.validate_formsets():
-            return self.form_invalid(form)
+        formsets = self.get_formsets()
+        errors = (fs.errors for fs in formsets if not fs.is_valid())
 
-        try:
-            with transaction.atomic():
+        with transaction.atomic():
+            if not errors:
                 self.object = form.save()
-                self.save_formsets()
-            return redirect(self.get_success_url())
-        except IntegrityError:
-            return self.form_invalid(form)
+                for formset in formsets:
+                    formset.instance = self.object
+                    formset.save()
+            else:
+                for error in errors:
+                    form.errors.update({**error})
+                return self.form_invalid(form)
+
+        return redirect(self.get_success_url())
     
 
     def get_formsets(self):
@@ -75,20 +84,6 @@ class MultipleFormsetMixin:
         formsets = [formset(**self.get_form_kwargs()) for formset in self.formsets]
         return formsets
 
-    def validate_formsets(self):
-        """Method to validate all formsets"""
-        valid = False
-        for formset in self.get_formsets():
-            valid = formset.is_valid()
-            if not valid: return valid
-        return valid
-
-    def save_formsets(self):
-        """Method to save all formsets"""
-        for formset in self.get_formsets():
-            if formset.is_valid():
-                formset.instance = self.object
-                formset.save()
 
 
 class MultiplePermissionRequiredModuleMixin(PermissionRequiredMixin):
