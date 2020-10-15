@@ -59,12 +59,12 @@ def get_label_of_field(model, field):
 
     if len(names):
         if hasattr(model, "_meta"):
-            return get_field_label_of_model(
+            return get_label_of_field(
                 model._meta.get_field(name).related_model, ".".join(names)
             )
         else:
             attr = getattr(model, name)
-            return get_field_label_of_model(
+            return get_label_of_field(
                 attr() if callable(attr) else attr, ".".join(names)
             )
     try:
@@ -85,7 +85,7 @@ def get_attr_of_object(instance, field):
         raise AttributeError(f"No existe le atributo <{name}> para {str(instance)}.")
 
     if len(names):
-        return get_attribute_of_instance(getattr(instance, name), ".".join(names))
+        return get_attr_of_object(getattr(instance, name), ".".join(names))
 
     try:
         field = instance._meta.get_field(name)
