@@ -21,22 +21,18 @@ class MenuForm(ModelForm):
         return menu
 
 
-class ModelFormOptions(DjangoModelFormOptions):
-    def __init__(self, options=None):
-        super().__init__(options)
-        self.fieldsets = getattr(options, 'fieldsets', None)
-
-
 class ModelFormMetaclass(DjangoModelFormMetaclass):
     def __new__(mcs, name, bases, attrs):
+        fieldsets = None
+        if "Meta" in attrs and hasattr(attrs["Meta"], "fieldsets"):
+            fieldsets = attrs["Meta"].fieldsets
+            attrs["Meta"].fields = mcs.__fields__(fieldsets)
         new_class = super().__new__(mcs, name, bases, attrs)
-        new_class._meta  = ModelFormOptions(getattr(new_class, 'Meta', None))
+        if fieldsets:
+            new_class._meta.fieldsets = fieldsets
         return new_class
 
-
-class FieldsetsModelForm(BaseModelForm, metaclass=ModelFormMetaclass):
-    @classmethod
-    def fields_for_model(cls, fieldsets):
+    def __fields__(fieldsets):
         fields = list()
         for fieldset in fieldsets:
             if isinstance(fieldset, tuple):
@@ -45,6 +41,8 @@ class FieldsetsModelForm(BaseModelForm, metaclass=ModelFormMetaclass):
                 fields.append(fieldset)
         return tuple(fields)
 
+
+class ModelForm(BaseModelForm, metaclass=ModelFormMetaclass):
     def get_fieldsets(self):
         sets = list()
         for fieldset in self._meta.fieldsets:
@@ -59,3 +57,6 @@ class FieldsetsModelForm(BaseModelForm, metaclass=ModelFormMetaclass):
                     'fields': [self[fieldset]]
                 })
         return sets
+
+    def has_fieldsets(self):
+        return hasattr(self._meta, "fieldsets")

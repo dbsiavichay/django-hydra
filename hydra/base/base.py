@@ -4,7 +4,7 @@
 #from django.db.models import Q
 #from django.shortcuts import redirect
 from django.utils.text import slugify
-#from django.core.exceptions import FieldDoesNotExist, ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured
 from django.db.models.base import ModelBase
 from django.db.utils import ProgrammingError
 #from django.forms.utils import pretty_name
@@ -33,7 +33,6 @@ class ModelSite:
     model = None
     form_class = None # Used for create Create and Update views
     fields = None # User for passed to Create and Update views for generate forms
-    fieldsets = () # Used for generate group of fields
     list_fields = ("__str__",) # Used for create ListView with de specified fields
     detail_fields = () # Used for create DetailView with specified fields
     allow_views = "list", "create", "update", "detail", "delete" # Says Hydra which views create

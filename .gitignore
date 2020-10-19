@@ -5,4 +5,5 @@
 *.lock
 .DS_Store
 .env
-
+build/
+*egg-info/
