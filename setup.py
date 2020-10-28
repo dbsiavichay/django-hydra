@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="django-hydra", # Replace with your own username
-    version="0.6",
+    version="0.7",
     author="Denis Siavichay",
     author_email="dbsiavichay@gmail.com",
     description="Gives superpowers to Django Framework",

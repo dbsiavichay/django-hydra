@@ -28,15 +28,14 @@ def inspect_clases(module_name, parent_class):
             and not cls == parent_class
         )
     except ModuleNotFoundError as error:
-        print(error)
-        pass
+        print(f"Error on load: {module_name}", error)
     return results
 
 
 def get_installed_apps():
     apps = (app for app in djangoapps.get_app_configs())
     if hasattr(settings, "APPS_DIR"):
-        apps = (app for app in apps if str(settings.APPS_DIR) in app.path )
+        apps = (app for app in apps if str(settings.APPS_DIR) in app.path)
     return apps
 
 

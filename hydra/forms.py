@@ -26,7 +26,10 @@ class ModelFormMetaclass(DjangoModelFormMetaclass):
         fieldsets = None
         if "Meta" in attrs and hasattr(attrs["Meta"], "fieldsets"):
             fieldsets = attrs["Meta"].fieldsets
-            attrs["Meta"].fields = mcs.__fields__(fieldsets)
+            fields = mcs.__fields__(fieldsets)
+            if hasattr(attrs["Meta"], "fields"):
+                fields = fields + attrs["Meta"].fields
+            attrs["Meta"].fields = fields
         new_class = super().__new__(mcs, name, bases, attrs)
         if fieldsets:
             new_class._meta.fieldsets = fieldsets

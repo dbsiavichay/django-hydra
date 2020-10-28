@@ -9,19 +9,64 @@ from django.db import transaction
 from .utils import get_label_of_field
 
 
+class FormsetList:
+    formsets = dict()
+
+    """
+    formsets = {
+        "invoice_formset": Formset
+    }
+    """
+
+    def __init__(self, formsets):
+        self.formsets = dict()
+
+        for key, formset_class in formsets.items():
+            headers = (
+                get_label_of_field(formset_class.form.Meta.model, field_name)
+                for field_name in formset_class.form.Meta.fields
+            )
+            self.formsets.update({
+                key: {
+                    "class": formset_class,
+                    "headers": headers
+                }
+            })
+
+    def is_valid(self):
+        errors = [fs["instance"].errors for fs in self.formsets.values() if not fs["instance"].is_valid()]
+        return not errors
+
+    def get_headers(self):
+        headers = {
+            f"{key}_headers": value["headers"]
+            for key, value in self.formsets.items()
+        }
+        return headers
+
+    def get_instances(self, **kwargs):
+        for key in self.formsets:
+            formset_class = self.formsets[key]["class"]
+            instance = formset_class(**kwargs)
+            self.formsets.get(key).update({
+                "instance": instance,
+            })
+
+        instances = {
+            key: value["instance"]
+            for key, value in self.formsets.items()
+        }
+        return instances
+
+"""
 class FormsetMixin:
-    """Class for add single formset in Form"""
 
     formset = None
 
     def get_context_data(self, **kwargs):
-        """
-        Args:
-            **kwargs:
-        """
         context = super().get_context_data(**kwargs)
         formset_headers = (
-            get_label_of_field(self.formset.form._meta.model, field_name) 
+            get_label_of_field(self.formset.form._meta.model, field_name)
             for field_name in self.formset.form._meta.fields
         )
         context.update({
@@ -44,45 +89,60 @@ class FormsetMixin:
         return redirect(self.get_success_url())
 
     def get_formset(self):
-        """Function to get formset"""
         return self.formset(**self.get_form_kwargs())
+"""
 
-
-class MultipleFormsetMixin:
+class FormsetMixin:
     """Class for add multiple formsets in form"""
 
-    formsets = ()
+    formsets = dict()
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.formsets = FormsetList(formsets=self.formsets)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update({
-            "formsets": self.get_formsets()
-        })
+
+        formsets = self.get_formsets()
+        headers = self.get_headers()
+        context.update(
+            **formsets, **headers
+        )
         return context
 
-    
-    def form_valid(self, form):
-        formsets = self.get_formsets()
-        errors = (fs.errors for fs in formsets if not fs.is_valid())
-
+    def formsets_valid(self, formsets, form):
         with transaction.atomic():
-            if not errors:
-                self.object = form.save()
-                for formset in formsets:
-                    formset.instance = self.object
-                    formset.save()
-            else:
-                for error in errors:
-                    form.errors.update({**error})
-                return self.form_invalid(form)
-
+            self.object = form.save()
+            for formset in formsets:
+                formset.instance = self.object
+                formset.save()
         return redirect(self.get_success_url())
-    
+
+    def formsets_invalid(self, formsets, form):
+        for formset in formsets:
+            for error in formset.errors:
+                form.errors.update(error)
+        return super().form_invalid(form)
+
+    def get_headers(self):
+        headers = self.formsets.get_headers()
+        return headers
 
     def get_formsets(self):
         """Method to get all formsets"""
-        formsets = [formset(**self.get_form_kwargs()) for formset in self.formsets]
+        formsets = self.formsets.get_instances(**self.get_form_kwargs())
         return formsets
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object() if self.action == "update" else None
+        form = self.get_form()
+        formsets = self.get_formsets().values()
+
+        if self.formsets.is_valid() and form.is_valid():
+            return self.formsets_valid(formsets, form)
+        else:
+            return self.formsets_invalid(formsets, form)
 
 
 
