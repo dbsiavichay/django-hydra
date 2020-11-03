@@ -4,6 +4,7 @@
 from django.shortcuts import redirect
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db import transaction
+from django.contrib import messages
 
 #Utils
 from .utils import get_label_of_field
@@ -22,10 +23,10 @@ class FormsetList:
         self.formsets = dict()
 
         for key, formset_class in formsets.items():
-            headers = (
+            headers = [
                 get_label_of_field(formset_class.form.Meta.model, field_name)
                 for field_name in formset_class.form.Meta.fields
-            )
+            ]
             self.formsets.update({
                 key: {
                     "class": formset_class,
@@ -57,6 +58,9 @@ class FormsetList:
             for key, value in self.formsets.items()
         }
         return instances
+
+    def get_formset(self, name):
+        return self.formsets[name]["instance"]
 
 """
 class FormsetMixin:
@@ -117,6 +121,8 @@ class FormsetMixin:
             for formset in formsets:
                 formset.instance = self.object
                 formset.save()
+
+        messages.success(self.request, "Se ha guardado correctamente.")
         return redirect(self.get_success_url())
 
     def formsets_invalid(self, formsets, form):
@@ -133,6 +139,9 @@ class FormsetMixin:
         """Method to get all formsets"""
         formsets = self.formsets.get_instances(**self.get_form_kwargs())
         return formsets
+
+    def get_formset(self, name):
+        return self.formsets.get_formset(name)
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object() if self.action == "update" else None

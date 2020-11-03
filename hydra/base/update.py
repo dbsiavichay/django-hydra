@@ -1,6 +1,6 @@
 """ """
 # Django
-from django.views.generic import View 
+from django.views.generic import View
 from django.views.generic import UpdateView as BaseUpdateView
 
 
