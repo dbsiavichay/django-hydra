@@ -6,7 +6,7 @@
 from django.utils.text import slugify
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models.base import ModelBase
-#from django.db.utils import ProgrammingError
+from django.db import connection
 #from django.forms.utils import pretty_name
 from django.urls import path, include  # reverse_lazy, reverse
 from django.apps import apps
@@ -262,6 +262,17 @@ class Site:
 
         return urlpatterns
 
+    def get_menus(self):
+        menus = None
+        try:
+            Menu = apps.get_model("hydra", "Menu")
+            if Menu._meta.db_table in connection.introspection.table_names():
+                menus = Menu.objects.all()
+        except LookupError as error:
+            print(error)
+            menus = None
+        return menus
+
     def get_urls(self):
         """Obtiene las urls de auto site"""
 
@@ -272,13 +283,7 @@ class Site:
         #       return update_wrapper(wrapper, view)
 
         urlpatterns = []
-        try:
-            Menu = apps.get_model("hydra", "Menu")
-            menus = Menu.objects.all()
-        except LookupError as error:
-            print(error)
-            menus = None
-
+        menus = self.get_menus()
         if menus:
             for menu in menus:
                 urlpatterns.extend(self.get_menu_urls(menu))
