@@ -25,10 +25,10 @@ class FormsetList:
         self.formsets = dict()
 
         for key, formset_class in formsets.items():
-            headers = (
+            headers = [
                 get_label_of_field(formset_class.form.Meta.model, field_name)
                 for field_name in formset_class.form.Meta.fields
-            )
+            ]
             self.formsets.update({
                 key: {
                     "class": formset_class,
