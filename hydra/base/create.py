@@ -8,7 +8,6 @@ from django.views.generic import CreateView as BaseCreateView
 
 # Mixins
 #from .mixins import BreadcrumbMixin, TemplateMixin
-#from hydra.mixins import MultiplePermissionRequiredModelMixin
 
 # Hydra
 from hydra.views import get_base_view
@@ -16,13 +15,7 @@ from hydra.shortcuts import get_urls_of_site
 
 class CreateMixin:
     """Definimos la clase que utilizará el modelo"""
-
-    """
-    permission_autosite = (
-        f'{self.model._meta.app_label}.add_{self.model._meta.model_name}',
-    )
-    permission_required = permission_autosite + self.permission_extra
-    """
+    #permission_required = permission_autosite + self.permission_extra
 
     action = "create"
 

@@ -20,15 +20,6 @@ from hydra.utils import (
 class ListMixin:
     """Definimos la clase que utilizará el modelo"""
 
-    """
-    permission_autosite = (
-        f"{self.model._meta.app_label}.view_{self.model._meta.model_name}",
-        f"{self.model._meta.app_label}.add_{self.model._meta.model_name}",
-        f"{self.model._meta.app_label}.change_{self.model._meta.model_name}",
-    )
-    permission_required = permission_autosite + self.permission_extra
-    """
-
     action = "list"
 
     def get_context_data(self, **kwargs):

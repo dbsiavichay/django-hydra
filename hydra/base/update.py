@@ -15,12 +15,6 @@ from hydra.shortcuts import get_urls_of_site
 class UpdateMixin:
     """Update View del modelo"""
 
-    """
-    permission_autosite = (
-        f'{self.model._meta.app_label}.change_{self.model._meta.model_name}',
-    )
-    permission_required = permission_autosite + self.permission_extra
-    """
     action = "update"
 
 class UpdateView(View):
@@ -30,7 +24,7 @@ class UpdateView(View):
         """ Crear la List View del modelo """
         # Class
         View = get_base_view(BaseUpdateView, UpdateMixin, self.site)
-        
+
         # Set attribures
         View.form_class = self.site.form_class
         View.fields = self.site.fields

@@ -2,7 +2,9 @@
 
 # Django
 from django.shortcuts import redirect
-from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib.auth.mixins import (
+    PermissionRequiredMixin as DjangoPermissionRequiredMixin
+)
 from django.db import transaction
 from django.contrib import messages
 
@@ -23,10 +25,10 @@ class FormsetList:
         self.formsets = dict()
 
         for key, formset_class in formsets.items():
-            headers = [
+            headers = (
                 get_label_of_field(formset_class.form.Meta.model, field_name)
                 for field_name in formset_class.form.Meta.fields
-            ]
+            )
             self.formsets.update({
                 key: {
                     "class": formset_class,
@@ -154,8 +156,7 @@ class FormsetMixin:
             return self.formsets_invalid(formsets, form)
 
 
-
-class MultiplePermissionRequiredModuleMixin(PermissionRequiredMixin):
+class MultiplePermissionRequiredModuleMixin(DjangoPermissionRequiredMixin):
     """Verifica los permisos de acceso al módulo"""
 
     def has_permission(self):
@@ -173,16 +174,28 @@ class MultiplePermissionRequiredModuleMixin(PermissionRequiredMixin):
         return any(user.has_perm(permission) for permission in permissions)
 
 
-class MultiplePermissionRequiredAppMixin(MultiplePermissionRequiredModuleMixin):
-    """Verifica los permisos de acceso a la app"""
-
-
-class MultiplePermissionRequiredModelMixin(PermissionRequiredMixin):
+class PermissionRequiredMixin(DjangoPermissionRequiredMixin):
     """Verifica los permisos de acceso al modelo"""
+
+    def get_permission_required(self):
+        app = self.model._meta.app_label
+        model = self.model._meta.model_name
+
+        if self.action == "create":
+            permissions = ("add",)
+        elif self.action == "update":
+            permissions = ("change",)
+        elif self.action == "delete":
+            permissions = ("delete",)
+        else:
+            permissions = ("view", "add", "change", "delete")
+
+        perms = (f"{app}.{perm}_{model}" for perm in permissions)
+        return perms
 
     def has_permission(self):
         user = self.request.user
-        if self.request.user.is_authenticated and self.request.user.is_superuser:
+        if all([user.is_authenticated, user.is_superuser, user.is_active]):
             return True
-        permissions = self.permission_required
-        return any(user.has_perm(permission) for permission in permissions)
+        perms = self.get_permission_required()
+        return any(user.has_perm(perm) for perm in perms)

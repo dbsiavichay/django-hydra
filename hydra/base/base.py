@@ -6,12 +6,13 @@
 from django.utils.text import slugify
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models.base import ModelBase
-from django.db.utils import ProgrammingError
+#from django.db.utils import ProgrammingError
 #from django.forms.utils import pretty_name
-from django.urls import path, include #reverse_lazy, reverse
+from django.urls import path, include  # reverse_lazy, reverse
+from django.apps import apps
 
 # Hydra
-from hydra.urls import get_module_urls
+#from hydra.urls import get_module_urls
 
 
 # Views
@@ -22,7 +23,8 @@ from .detail import DetailView
 from .delete import DeleteView
 
 # Utils
-from hydra.utils import import_class
+#from hydra.utils import import_class
+
 
 ALL_FIELDS = "__all__"
 
@@ -220,6 +222,46 @@ class Site:
 
             self._registry[model] = site_class()
 
+    def get_model_urls(self, menu):
+        urlpatterns = []
+        try:
+            model = apps.get_model(menu.action.app_label, menu.action.element)
+            if model in self._registry:
+                model_site = self._registry[model]
+                urlpatterns = [
+                    path(f"{menu.route}/", include(model_site.urls))
+                ]
+        except LookupError:
+            pass
+       
+        return urlpatterns
+
+    def get_view_urls(self, menu):
+        urlpatterns = []
+        try:
+            app_config = apps.get_app_config(menu.action.app_label)
+            View = getattr(app_config.module.views, menu.action.element)
+            urlpatterns = [
+                path(
+                    route=f"{menu.route}/",
+                    view=View.as_view(),
+                    name=slugify(menu.name),
+                )
+            ]
+        except LookupError:
+            pass
+
+        return urlpatterns
+
+    def get_menu_urls(self, menu):
+        urlpatterns = []
+        if menu.action.type == 1:
+            urlpatterns.extend(self.get_model_urls(menu))
+        else:
+            urlpatterns.extend(self.get_view_urls(menu))
+
+        return urlpatterns
+
     def get_urls(self):
         """Obtiene las urls de auto site"""
 
@@ -229,34 +271,23 @@ class Site:
         #       wrapper.admin_site = self
         #       return update_wrapper(wrapper, view)
 
-        # Admin-site-wide views.
-        urlpatterns = get_module_urls()
+        urlpatterns = []
+        try:
+            Menu = apps.get_model("hydra", "Menu")
+            menus = Menu.objects.all()
+        except LookupError as error:
+            print(error)
+            menus = None
 
-        # Add in each model's views, and create a list of valid URLS for the
-        # app_index
-        for model, model_site in self._registry.items():
-            #info = (model._meta.app_label, slugify(model._meta.verbose_name))
-            #if not model_site.routes:
-            #    info = model_site.get_info()
-            #    url_format = "%s/%s/" % info
-            #    urlpatterns += [path(url_format, include(model_site.urls))]
-            #else:
-
-            try:
-                Menu = import_class("hydra.models", "Menu")
-                ContentType = import_class("django.contrib.contenttypes.models", "ContentType")
-                content_type = ContentType.objects.get_for_model(model)
-                menus = Menu.objects.filter(content_type=content_type)
-            except ProgrammingError as error:
-                menus = None
-
-            if menus:
-                for menu in menus:
-                    urlpatterns += [path(f"{menu.route}/", include(model_site.urls))]
-            else:
-                info = model_site.get_info()                
+        if menus:
+            for menu in menus:
+                urlpatterns.extend(self.get_menu_urls(menu))
+        else:
+            for model, model_site in self._registry.items():
+                info = model_site.get_info()
                 url_format = "%s/%s/" % info
                 urlpatterns += [path(url_format, include(model_site.urls))]
+
         return urlpatterns
 
     @property

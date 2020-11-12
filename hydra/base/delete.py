@@ -13,11 +13,6 @@ from hydra.shortcuts import get_urls_of_site
 class DeleteMixin:
     """Definimos la clase que utilizará el modelo"""
 
-    """
-    permission_required = (
-        f'{self.model._meta.app_label}.delete_{self.model._meta.model_name}',
-    )
-    """
     action = "delete"
 
     def get_context_data(self, **kwargs):

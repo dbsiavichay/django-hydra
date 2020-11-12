@@ -20,7 +20,9 @@ class ModuleView(TemplateView):
 
 
 def get_base_view(View, Mixin, site):
-    class View(BreadcrumbMixin, UrlMixin, TemplateMixin, Mixin, View):
+    from hydra.mixins import PermissionRequiredMixin
+
+    class View(PermissionRequiredMixin, BreadcrumbMixin, UrlMixin, TemplateMixin, Mixin, View):
         def form_valid(self, form):
             messages.success(self.request, "Se ha guardado correctamente.")
             return super().form_valid(form)
@@ -31,15 +33,3 @@ def get_base_view(View, Mixin, site):
     View.site = site
     View.model = site.model
     return View
-
-    #
-    # def has_permission(self):
-    #     return False
-    #     ctx = super().get_context_data(self.request.kwargs)
-    #     print(ctx)
-    #     user = self.request.user
-    #     permissions = list()
-    #     for model in ctx["models_permissions"]:
-    #         permissions.append(f"{model._meta.app_label}.view_{model._meta.model_name}")
-    #     return any(user.has_perm(permission) for permission in permissions)
-

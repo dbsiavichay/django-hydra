@@ -101,7 +101,7 @@ def import_class(module_name, class_name):
     cls = None
     try:
         module = import_module(module_name)
-        members = inspect.getmembers(module)
+        members = inspect.getmembers(module, inspect.isclass)
         for name, klass in members:
             if name == class_name:
                 cls = klass
