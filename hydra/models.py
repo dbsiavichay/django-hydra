@@ -44,6 +44,26 @@ class Action(models.Model):
         unique_together = ("app_label", "element")
         ordering = ("name",)
 
+    def get_model_class(self):
+        if self.type != self.TYPE.object:
+            return None
+        try:
+            model_class = apps.get_model(self.app_label, self.element)
+            return model_class
+        except LookupError:
+            return None
+
+    def get_view_class(self):
+        if self.type != self.TYPE.view:
+            return None
+        try:
+            app_config = apps.get_app_config(self.app_label)
+            view_class = getattr(app_config.module.views, self.element)
+            return view_class
+        except LookupError:
+            return None
+
+
 
 class Menu(models.Model):
     """ Models for menu """
@@ -82,21 +102,21 @@ class Menu(models.Model):
         return res
 
     def get_url(self):
-        url = '#'
+        url_name = None
         if self.action.type == Action.TYPE.object:
-            try:
-                model_class = apps.get_model(self.action.app_label, self.action.element)
-            except LookupError:
-                return url
-
-            if model_class in site._registry:
+            model_class = self.action.get_model_class()
+            if model_class and model_class in site._registry:
                 model_site = site._registry[model_class]
-                try:
-                    url = reverse(model_site.get_url_name("list"))
-                except NoReverseMatch:
-                    print("Not found url for %s" % model_site.get_url_name("list"))
+                url_name = model_site.get_url_name("list")
+        else:
+            url_name = f"site:{slugify(self.name)}"
+        try:
+            url = reverse(url_name)
+            return url
+        except NoReverseMatch:
+            print("Not found url for %s" % url_name)
 
-        return url
+        return url_name
 
 
 def map():
@@ -123,10 +143,8 @@ def map():
 
         index = 1
         for model in apps[app]:
-            try:
-                action = Action.objects.get(app_label=app.label, element=model._meta.model_name)
-            except Action.DoesNotExist:
-                breakpoint()
+            action = Action.objects.get(app_label=app.label, element=model._meta.model_name)
+
             submenu = Menu(
                 parent=menu,
                 name=model._meta.verbose_name_plural.capitalize(),

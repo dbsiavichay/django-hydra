@@ -224,33 +224,27 @@ class Site:
 
     def get_model_urls(self, menu):
         urlpatterns = []
-        try:
-            model = apps.get_model(menu.action.app_label, menu.action.element)
-            if model in self._registry:
-                model_site = self._registry[model]
-                urlpatterns = [
-                    path(f"{menu.route}/", include(model_site.urls))
-                ]
-        except LookupError:
-            pass
+        model = menu.action.get_model_class()
+        if model and model in self._registry:
+            model_site = self._registry[model]
+            urlpatterns = [
+                path(f"{menu.route}/", include(model_site.urls))
+            ]
        
         return urlpatterns
 
     def get_view_urls(self, menu):
         urlpatterns = []
-        try:
-            app_config = apps.get_app_config(menu.action.app_label)
-            View = getattr(app_config.module.views, menu.action.element)
+        view = menu.action.get_view_class()
+        if view:
             urlpatterns = [
                 path(
                     route=f"{menu.route}/",
-                    view=View.as_view(),
+                    view=view.as_view(),
                     name=slugify(menu.name),
                 )
             ]
-        except LookupError:
-            pass
-
+       
         return urlpatterns
 
     def get_menu_urls(self, menu):
