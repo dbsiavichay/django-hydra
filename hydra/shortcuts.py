@@ -51,34 +51,3 @@ def get_urls_of_site(site, object=None):
 
     return urls
 
-
-def get_actions_and_elements(app_config, using, Action):
-    actions = {
-        action.element: action
-        for action in Action.objects.filter(app_label=app_config.label)
-    }
-
-    model_elements = {
-        model._meta.model_name: (
-            f"{app_config.verbose_name.capitalize()} | {model._meta.verbose_name.capitalize()}"
-        )
-        for model in app_config.get_models()
-    }
-
-    if hasattr(app_config.module, "views"):
-        view_elements = {
-            name: (
-                f"{app_config.verbose_name.capitalize()} | {name}"
-            )
-            for name, candidate in inspect.getmembers(app_config.module.views, inspect.isclass)
-            if issubclass(candidate, View)
-        }
-    else:
-        view_elements = {}
-
-    elements = {
-        **model_elements,
-        **view_elements
-    }
-
-    return actions, elements, model_elements, view_elements

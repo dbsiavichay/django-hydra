@@ -1,15 +1,12 @@
-"""Mixins for autosite"""
+"""Mixins for formsets"""
 
 # Django
 from django.shortcuts import redirect
-from django.contrib.auth.mixins import (
-    PermissionRequiredMixin as DjangoPermissionRequiredMixin
-)
 from django.db import transaction
 from django.contrib import messages
 
 #Utils
-from .utils import get_label_of_field
+from hydra.utils import get_label_of_field
 
 
 class FormsetList:
@@ -64,39 +61,6 @@ class FormsetList:
     def get_formset(self, name):
         return self.formsets[name]["instance"]
 
-"""
-class FormsetMixin:
-
-    formset = None
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        formset_headers = (
-            get_label_of_field(self.formset.form._meta.model, field_name)
-            for field_name in self.formset.form._meta.fields
-        )
-        context.update({
-            "formset_headers": formset_headers,
-            "formset": self.get_formset()
-        })
-        return context
-
-    def form_valid(self, form):
-        formset = self.get_formset()
-        with transaction.atomic():
-            if formset.is_valid():
-                self.object = form.save()
-                formset.instance = self.object
-                formset.save()
-            else:
-                for error in formset.errors:
-                    form.errors.update({**error})
-                return self.form_invalid(form)
-        return redirect(self.get_success_url())
-
-    def get_formset(self):
-        return self.formset(**self.get_form_kwargs())
-"""
 
 class FormsetMixin:
     """Class for add multiple formsets in form"""
@@ -154,48 +118,3 @@ class FormsetMixin:
             return self.formsets_valid(formsets, form)
         else:
             return self.formsets_invalid(formsets, form)
-
-
-class MultiplePermissionRequiredModuleMixin(DjangoPermissionRequiredMixin):
-    """Verifica los permisos de acceso al módulo"""
-
-    def has_permission(self):
-        user = self.request.user
-        if self.request.user.is_authenticated and self.request.user.is_superuser:
-            return True
-        permissions = list()
-        ctx = self.get_context_data()
-        for model in ctx["models_permissions"]:
-            permissions.append(f"{model._meta.app_label}.view_{model._meta.model_name}")
-            permissions.append(f"{model._meta.app_label}.add_{model._meta.model_name}")
-            permissions.append(
-                f"{model._meta.app_label}.change_{model._meta.model_name}"
-            )
-        return any(user.has_perm(permission) for permission in permissions)
-
-
-class PermissionRequiredMixin(DjangoPermissionRequiredMixin):
-    """Verifica los permisos de acceso al modelo"""
-
-    def get_permission_required(self):
-        app = self.model._meta.app_label
-        model = self.model._meta.model_name
-
-        if self.action == "create":
-            permissions = ("add",)
-        elif self.action == "update":
-            permissions = ("change",)
-        elif self.action == "delete":
-            permissions = ("delete",)
-        else:
-            permissions = ("view", "add", "change", "delete")
-
-        perms = (f"{app}.{perm}_{model}" for perm in permissions)
-        return perms
-
-    def has_permission(self):
-        user = self.request.user
-        if all([user.is_authenticated, user.is_superuser, user.is_active]):
-            return True
-        perms = self.get_permission_required()
-        return any(user.has_perm(perm) for perm in perms)

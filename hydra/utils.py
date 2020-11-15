@@ -4,39 +4,7 @@ from importlib import import_module
 
 # Django
 from django.core.exceptions import FieldDoesNotExist
-from django.conf import settings
 from django.forms.utils import pretty_name
-from django.apps import apps as djangoapps
-
-
-
-def inspect_sites(app):
-    from . import ModelSite
-    results = inspect_clases(f"{app}.sites", ModelSite)
-    return (cls for cls in results if cls.model is not None)
-
-
-def inspect_clases(module_name, parent_class):
-    results = ()
-    try:
-        module = import_module(module_name)
-        results = (
-            cls
-            for name, cls in inspect.getmembers(module)
-            if inspect.isclass(cls)
-            and issubclass(cls, parent_class)
-            and not cls == parent_class
-        )
-    except ModuleNotFoundError as error:
-        print(f"Error on load: {module_name}", error)
-    return results
-
-
-def get_installed_apps():
-    apps = (app for app in djangoapps.get_app_configs())
-    if hasattr(settings, "APPS_DIR"):
-        apps = (app for app in apps if str(settings.APPS_DIR) in app.path)
-    return apps
 
 
 def get_label_of_field(model, field):

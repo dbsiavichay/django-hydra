@@ -1,33 +1,31 @@
 """ """
-# Python
-import copy
-
 # Django
 from django.views.generic import View
-from django.views.generic import CreateView as BaseCreateView
+from django.views.generic import UpdateView as BaseUpdateView
+
 
 # Mixins
-#from .mixins import BreadcrumbMixin, TemplateMixin
+#from hydra.mixins import MultiplePermissionRequiredModelMixin
 
 # Hydra
-from hydra.views import get_base_view
+from .base import get_base_view
 from hydra.shortcuts import get_urls_of_site
 
-class CreateMixin:
-    """Definimos la clase que utilizará el modelo"""
-    #permission_required = permission_autosite + self.permission_extra
 
-    action = "create"
+class UpdateMixin:
+    """Update View del modelo"""
 
-class CreateView(View):
+    action = "update"
+
+class UpdateView(View):
     site = None
 
     def view(self, request, *args, **kwargs):
         """ Crear la List View del modelo """
         # Class
-        View = get_base_view(BaseCreateView, CreateMixin, self.site)
+        View = get_base_view(BaseUpdateView, UpdateMixin, self.site)
 
-        # Set attributes
+        # Set attribures
         View.form_class = self.site.form_class
         View.fields = self.site.fields
 

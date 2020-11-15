@@ -7,7 +7,7 @@ from django.views.generic import ListView as BaseListView
 #from hydra.mixins import MultiplePermissionRequiredModelMixin
 
 # Hydra
-from hydra.views import get_base_view
+from .base import get_base_view
 from hydra.shortcuts import get_urls_of_site
 
 # Utilities

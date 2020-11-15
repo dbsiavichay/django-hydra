@@ -6,33 +6,41 @@ from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
 from django.utils.text import slugify
 from django.apps import apps
+from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
 
 # Hydra
 from . import site
+from .utils import import_class
 
 
 class Action(models.Model):
-    class TYPE(models.IntegerChoices):
-        object = 1, "Objecto"
-        view = 2, "Vista"
+    class ToChoices(models.IntegerChoices):
+        MODEL = 1, "Modelo"
+        CLASSVIEW = 2, "Vista"
 
     APP_CHOICES = (
         (app.label, app.verbose_name.capitalize()) for app in apps.get_app_configs()
     )
 
-    type = models.PositiveSmallIntegerField(
-        choices=TYPE.choices,
-        verbose_name="tipo de acción"
+    to = models.PositiveSmallIntegerField(
+        choices=ToChoices.choices,
+        verbose_name="acción hacia un"
     )
-    name = models.CharField(max_length=128, verbose_name='nombre de la acción') 
     app_label = models.CharField(
         max_length=128,
         choices=APP_CHOICES,
         verbose_name="aplicación"
     )
+    name = models.CharField(max_length=128, verbose_name='nombre de la acción') 
     element = models.CharField(
         max_length=128,
         verbose_name='elemento accionado'
+    )
+    permissions = models.ManyToManyField(
+        Permission,
+        blank=True,
+        verbose_name="permisos específicos"
     )
 
     def __str__(self):
@@ -45,7 +53,7 @@ class Action(models.Model):
         ordering = ("name",)
 
     def get_model_class(self):
-        if self.type != self.TYPE.object:
+        if self.to != self.ToChoices.MODEL:
             return None
         try:
             model_class = apps.get_model(self.app_label, self.element)
@@ -54,17 +62,39 @@ class Action(models.Model):
             return None
 
     def get_view_class(self):
-        if self.type != self.TYPE.view:
+        if self.to != self.ToChoices.CLASSVIEW:
             return None
         try:
             app_config = apps.get_app_config(self.app_label)
-            view_class = getattr(app_config.module.views, self.element)
+            view_class = import_class(f"{app_config.name}.views", self.element)
             return view_class
-        except LookupError:
+        except (LookupError):
             return None
 
+    def get_permissions(self):
+        return [f"auth.{perm.codename}" for perm in self.permissions.all()]
 
+    def has_permissions(self, user):
+        if not user.is_authenticated or not user.is_active:
+            return False
+        if user.is_superuser:
+            return True
 
+        if self.to == self.ToChoices.MODEL:
+            basic_perms = any(
+                user.has_perm(f"{self.app_label}.{perm}_{self.element}") 
+                for perm in ("view", "add", "change", "delete")
+            )
+        else:
+            basic_perms = True
+
+        specific_perms = all(
+            user.has_perm(perm) for perm in self.get_permissions()
+        )
+
+        return basic_perms and specific_perms
+
+    
 class Menu(models.Model):
     """ Models for menu """
 
@@ -91,6 +121,7 @@ class Menu(models.Model):
         blank=True, null=True, 
         verbose_name='clase css del ícono'
     )
+    is_group = models.BooleanField(verbose_name="agrupa")
     sequence = models.PositiveSmallIntegerField(verbose_name='secuencia')
     is_active = models.BooleanField(default=True, verbose_name='activo?')
 
@@ -103,7 +134,7 @@ class Menu(models.Model):
 
     def get_url(self):
         url_name = None
-        if self.action.type == Action.TYPE.object:
+        if self.action.to == Action.ToChoices.MODEL:
             model_class = self.action.get_model_class()
             if model_class and model_class in site._registry:
                 model_site = site._registry[model_class]
@@ -117,41 +148,3 @@ class Menu(models.Model):
             print("Not found url for %s" % url_name)
 
         return url_name
-
-
-def map():
-    Menu.objects.all().delete()
-
-    default_action = Action.objects.get(app_label="hydra", element="ModuleView")
-
-    apps = {}
-    for model in site._registry:
-        if model._meta.app_config in apps:
-            apps[model._meta.app_config].append(model)
-        else:
-            apps[model._meta.app_config] = [model]
-
-    sequence = 1
-    for app in apps:
-        menu = Menu.objects.create(
-            name=app.verbose_name.capitalize(),
-            action=default_action,
-            route=slugify(app.verbose_name),
-            sequence=sequence
-        )
-        sequence += 1
-
-        index = 1
-        for model in apps[app]:
-            action = Action.objects.get(app_label=app.label, element=model._meta.model_name)
-
-            submenu = Menu(
-                parent=menu,
-                name=model._meta.verbose_name_plural.capitalize(),
-                action=action,
-                sequence=index
-            )
-
-            submenu.route = str(submenu)
-            submenu.save()
-            index += 1

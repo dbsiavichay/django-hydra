@@ -1,11 +1,9 @@
 # Django
 from django.views.generic import TemplateView
 from django.conf import settings
-from django.urls import reverse
 from django.contrib import messages
 
-# Mixins
-from hydra.base.mixins import BreadcrumbMixin, UrlMixin, TemplateMixin
+# Utils
 from hydra.shortcuts import get_urls_of_site
 
 
@@ -20,7 +18,7 @@ class ModuleView(TemplateView):
 
 
 def get_base_view(View, Mixin, site):
-    from hydra.mixins import PermissionRequiredMixin
+    from hydra.mixins import PermissionRequiredMixin, BreadcrumbMixin, UrlMixin, TemplateMixin
 
     class View(PermissionRequiredMixin, BreadcrumbMixin, UrlMixin, TemplateMixin, Mixin, View):
         def form_valid(self, form):

@@ -8,6 +8,8 @@ from django.forms.utils import ErrorList
 from django.forms.models import ModelFormOptions as DjangoModelFormOptions
 from django.forms.models import ModelFormMetaclass as DjangoModelFormMetaclass
 from django.views.generic import View
+from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
 from django.apps import apps
 
 # Models
@@ -25,6 +27,11 @@ class ActionForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        ct = ContentType.objects.get_for_model(Permission)
+        codenames = ("add_permission","change_permission","delete_permission","view_permission")
+        queryset = Permission.objects.filter(content_type=ct).exclude(codename__in=codenames)
+        self.fields["permissions"].queryset = queryset
 
         MODEL_CHOICES = [
             (
@@ -58,6 +65,20 @@ class MenuForm(ModelForm):
         if commit:
             menu.save()
         return menu
+
+
+class PermissionForm(ModelForm):
+    class Meta:
+        model = Permission
+        exclude = ("content_type",)
+
+    def save(self, commit=True):
+        perm = super().save(commit=False)
+        ct = ContentType.objects.get_for_model(Permission)
+        perm.content_type = ct
+        if commit:
+            perm.save()
+        return perm
 
 
 class ModelFormMetaclass(DjangoModelFormMetaclass):

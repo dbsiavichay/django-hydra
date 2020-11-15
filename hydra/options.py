@@ -1,32 +1,15 @@
-"""Classes and functios for register site models"""
-
 # Django
-#from django.db.models import Q
-#from django.shortcuts import redirect
-from django.utils.text import slugify
 from django.core.exceptions import ImproperlyConfigured
-from django.db.models.base import ModelBase
-from django.db import connection
-#from django.forms.utils import pretty_name
-from django.urls import path, include  # reverse_lazy, reverse
-from django.apps import apps
-
-# Hydra
-#from hydra.urls import get_module_urls
-
+from django.utils.text import slugify
+from django.urls import path
 
 # Views
-from .list import ListView
-from .create import CreateView
-from .update import UpdateView
-from .detail import DetailView
-from .delete import DeleteView
-
-# Utils
-#from hydra.utils import import_class
-
+from .views import (
+    ListView, CreateView, UpdateView, DetailView, DeleteView
+)
 
 ALL_FIELDS = "__all__"
+
 
 class ModelSite:
     """Superclass that generate CRUD Views for any model"""
@@ -79,7 +62,8 @@ class ModelSite:
     breadcrumb_detail_text = None
     breadcrumb_delete_text = "Delete"
 
-    def __init__(self, **kwargs):
+    def __init__(self, model, **kwargs):
+        self.model = model
         if not self.model:
             raise ImproperlyConfigured("The 'model' attribute must be specified.")
 
@@ -198,101 +182,3 @@ class ModelSite:
         return self.get_urls()
 
    
-class Site:
-    """Site class"""
-
-    _registry = {}
-    name = 'site'
-
-    def register(self, model_or_iterable, site_class=None, **options):
-        """Registra las clases en el auto site"""
-
-        site_class = site_class or ModelSite
-        if isinstance(model_or_iterable, ModelBase):
-            model_or_iterable = [model_or_iterable]
-        for model in model_or_iterable:
-            if model._meta.abstract:
-                raise ImproperlyConfigured(
-                    'The model %s is abstract, so it cannot be registered with hydra.'
-                    % model.__name__
-                )
-
-            if model in self._registry:
-                raise Exception('The model %s is already registered' % model.__name__)
-
-            self._registry[model] = site_class()
-
-    def get_model_urls(self, menu):
-        urlpatterns = []
-        model = menu.action.get_model_class()
-        if model and model in self._registry:
-            model_site = self._registry[model]
-            urlpatterns = [
-                path(f"{menu.route}/", include(model_site.urls))
-            ]
-       
-        return urlpatterns
-
-    def get_view_urls(self, menu):
-        urlpatterns = []
-        view = menu.action.get_view_class()
-        if view:
-            urlpatterns = [
-                path(
-                    route=f"{menu.route}/",
-                    view=view.as_view(),
-                    name=slugify(menu.name),
-                )
-            ]
-       
-        return urlpatterns
-
-    def get_menu_urls(self, menu):
-        urlpatterns = []
-        if menu.action.type == 1:
-            urlpatterns.extend(self.get_model_urls(menu))
-        else:
-            urlpatterns.extend(self.get_view_urls(menu))
-
-        return urlpatterns
-
-    def get_menus(self):
-        menus = None
-        try:
-            Menu = apps.get_model("hydra", "Menu")
-            if Menu._meta.db_table in connection.introspection.table_names():
-                menus = Menu.objects.all()
-        except LookupError as error:
-            print(error)
-            menus = None
-        return menus
-
-    def get_urls(self):
-        """Obtiene las urls de auto site"""
-
-        # def wrap(view, cacheable=False):
-        #   def wrapper(*args, **kwargs):
-        #       return self.admin_view(view, cacheable)(*args, **kwargs)
-        #       wrapper.admin_site = self
-        #       return update_wrapper(wrapper, view)
-
-        urlpatterns = []
-        menus = self.get_menus()
-        if menus:
-            for menu in menus:
-                urlpatterns.extend(self.get_menu_urls(menu))
-        else:
-            for model, model_site in self._registry.items():
-                info = model_site.get_info()
-                url_format = "%s/%s/" % info
-                urlpatterns += [path(url_format, include(model_site.urls))]
-
-        return urlpatterns
-
-    @property
-    def urls(self):
-        """Permite registrar las URLs en el archivo de urls del proyecto"""
-        return self.get_urls(), 'site', self.name
-
-
-site = Site()
