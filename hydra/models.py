@@ -19,17 +19,12 @@ class Action(models.Model):
         MODEL = 1, "Modelo"
         CLASSVIEW = 2, "Vista"
 
-    APP_CHOICES = (
-        (app.label, app.verbose_name.capitalize()) for app in apps.get_app_configs()
-    )
-
     to = models.PositiveSmallIntegerField(
         choices=ToChoices.choices,
         verbose_name="acción hacia un"
     )
     app_label = models.CharField(
         max_length=128,
-        choices=APP_CHOICES,
         verbose_name="aplicación"
     )
     name = models.CharField(max_length=128, verbose_name='nombre de la acción') 
@@ -108,7 +103,7 @@ class Menu(models.Model):
     name = models.CharField(max_length=128, verbose_name='nombre')
     route = models.CharField(
         max_length=512,
-        unique=True,
+        unique=True, editable=False,
         verbose_name='ruta de acceso'
     )
     action = models.ForeignKey(
@@ -121,7 +116,10 @@ class Menu(models.Model):
         blank=True, null=True, 
         verbose_name='clase css del ícono'
     )
-    is_group = models.BooleanField(verbose_name="agrupa")
+    is_group = models.BooleanField(
+        editable=False,
+        verbose_name="agrupa"
+    )
     sequence = models.PositiveSmallIntegerField(verbose_name='secuencia')
     is_active = models.BooleanField(default=True, verbose_name='activo?')
 

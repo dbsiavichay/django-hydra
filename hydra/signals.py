@@ -54,18 +54,18 @@ def check(sender, instance, **kwargs):
 
     post_save.disconnect(check, sender=Menu)
 
-    def update_routes(menus):
-        for menu in menus:
-            update_routes(menu.submenus.all())
-            menu.route = str(menu)
-            menu.save()
-
+    def update_route(menu):
+        menu.route = str(menu)
+        menu.save()
+        for submenu in menu.submenus.all():
+            update_route(submenu)
+        
     def update_groups():
         for menu in Menu.objects.all():
             menu.is_group = bool(menu.submenus.count())
             menu.save()
 
-    update_routes(instance.submenus.all())
+    update_route(instance)
     update_groups()
 
     post_save.connect(check, sender=Menu)

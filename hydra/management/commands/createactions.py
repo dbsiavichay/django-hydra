@@ -10,6 +10,7 @@ from django.apps import apps
 # Models
 from hydra.models import Action
 
+
 def get_views_catalog():
     module_name = "django.views"
 
@@ -30,6 +31,7 @@ def get_views_catalog():
 
     names = set(map_module(module_name))
     return list(names)
+
 
 VIEWS_CATALOG = get_views_catalog()
 
@@ -69,6 +71,7 @@ class Command(BaseCommand):
             Action.objects.bulk_create(acts)
 
         self.stdout.write(self.style.SUCCESS("Successfully actions was created"))
+
 
 def get_actions_and_elements(app_config):
     actions = {

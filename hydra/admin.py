@@ -1,5 +1,7 @@
 """ Hydra model admin """
 
+"""
+
 # Django
 from django.contrib import admin
 from django.contrib.auth.models import Permission
@@ -9,26 +11,24 @@ from django.contrib.contenttypes.models import ContentType
 from hydra.models import Action, Menu
 
 # Forms
-from hydra.forms import ActionForm, MenuForm, PermissionForm
+from hydra.forms import BaseActionForm, BaseMenuForm, BasePermissionForm
 
 @admin.register(Action)
 class ActionAdmin(admin.ModelAdmin):
-    model = Action
-    form = ActionForm
+    form = BaseActionForm
     list_display = ("__str__", "app_label")
 
 
 @admin.register(Menu)
 class MenuAdmin(admin.ModelAdmin):
-    model = Menu
-    form = MenuForm
+    form = BaseMenuForm
     list_display = ('__str__', 'action',)
 
 
 @admin.register(Permission)
 class PermisionAdmin(admin.ModelAdmin):
     model = Permission
-    form = PermissionForm
+    form = BasePermissionForm
     list_display = ("name", "codename", "__str__")
 
     def __init__(self, model, admin_site):
@@ -43,3 +43,4 @@ class PermisionAdmin(admin.ModelAdmin):
         qs = qs.filter(content_type=ct).exclude(codename__in=codenames)
         return qs
 
+"""
