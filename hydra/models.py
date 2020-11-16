@@ -117,7 +117,7 @@ class Menu(models.Model):
         verbose_name='clase css del ícono'
     )
     is_group = models.BooleanField(
-        editable=False,
+        default=False, editable=False,
         verbose_name="agrupa"
     )
     sequence = models.PositiveSmallIntegerField(verbose_name='secuencia')
@@ -127,8 +127,11 @@ class Menu(models.Model):
         ordering = ('route', 'sequence')
 
     def __str__(self):
-        res = f'{self.parent}/{slugify(self.name)}' if self.parent else slugify(self.name)
-        return res
+        return f"{self.name} | {self.get_route()}" 
+
+    def get_route(self):
+        route = f"{self.parent.get_route()}/{slugify(self.name)}" if self.parent else slugify(self.name)
+        return route
 
     def get_url(self):
         url_name = None

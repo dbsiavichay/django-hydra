@@ -48,14 +48,18 @@ def prepopulate_slug(sender, instance, **kwargs):
     slug = " ".join(fields)
     instance.slug = slugify(slug)
 
+@receiver(pre_save, sender=Menu)
+def add_route(sender, instance, **kwargs):
+    instance.route = instance.get_route()
 
 @receiver(post_save, sender=Menu)
 def check(sender, instance, **kwargs):
 
     post_save.disconnect(check, sender=Menu)
+    pre_save.disconnect(add_route, sender=Menu)
 
     def update_route(menu):
-        menu.route = str(menu)
+        menu.route = menu.get_route()
         menu.save()
         for submenu in menu.submenus.all():
             update_route(submenu)
@@ -69,5 +73,6 @@ def check(sender, instance, **kwargs):
     update_groups()
 
     post_save.connect(check, sender=Menu)
+    pre_save.connect(add_route, sender=Menu)
 
 

@@ -1,7 +1,6 @@
 # Django
 from django.core.management.base import BaseCommand, CommandError
 from django.core.management import call_command
-from django.utils.text import slugify
 
 # Models
 from hydra.models import Action, Menu
@@ -32,7 +31,6 @@ class Command(BaseCommand):
             menu = Menu.objects.create(
                 name=app.verbose_name.capitalize(),
                 action=default_action,
-                route=slugify(app.verbose_name),
                 is_group=True,
                 sequence=sequence
             )
@@ -42,7 +40,7 @@ class Command(BaseCommand):
             for model in apps[app]:
                 action = Action.objects.get(app_label=app.label, element=model._meta.model_name)
 
-                submenu = Menu(
+                Menu.objects.create(
                     parent=menu,
                     name=model._meta.verbose_name_plural.capitalize(),
                     action=action,
@@ -50,8 +48,6 @@ class Command(BaseCommand):
                     sequence=index
                 )
 
-                submenu.route = str(submenu)
-                submenu.save()
                 index += 1
 
 
