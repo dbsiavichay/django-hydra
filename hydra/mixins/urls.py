@@ -13,9 +13,9 @@ class UrlMixin:
         urls = get_urls_of_site(self.site, object)
 
         if "site" in context:
-            context["site"].update(urls)
+            context["site"].update({"urls":urls})
         else:
             context.update({
-                "site": urls
+                "site": {"urls":urls}
             })
         return context

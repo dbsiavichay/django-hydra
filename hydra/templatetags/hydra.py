@@ -1,5 +1,6 @@
 # Python
 from copy import copy
+import json
 import types
 import re
 
@@ -291,7 +292,10 @@ def render_form(form, **kwargs):
 
 
 
-# TEMPLATE TAGS PARA RECUPERAR VERBOSE_NAME
+# Filter utilities
+@register.filter("json")
+def get_json(value):
+    return json.dumps(value)
 """
 @register.filter
 def verbose_name(obj):

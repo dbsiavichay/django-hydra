@@ -64,7 +64,7 @@ class BreadcrumbMixin:
         breadcrumbs.append(
             (
                 self.get_breadcrumb_text(self.action) or str(self.object),
-                reverse_lazy(url_name, args=[get_slug_or_pk(self.object)],),
+                reverse_lazy(url_name, kwargs=get_slug_or_pk(self.object),),
             )
         )
         return breadcrumbs

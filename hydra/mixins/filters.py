@@ -3,17 +3,26 @@ import operator
 from functools import reduce
 
 # Django
-from django.urls import reverse, reverse_lazy, NoReverseMatch
-from django.utils.html import format_html
-
-# Shortcuts
-from hydra.shortcuts import get_urls_of_site, get_slug_or_pk
-
-# Utils
-from hydra.utils import import_class
+from django.db.models import Q
 
 
 class FilterMixin:
+    def get_params(self, value):
+        args = []
+        for field in self.site.search_fields:
+            args.append(Q(**{field: value}))
+        
+        return reduce(operator.__or__, args)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search_value = self.request.GET.get("search")
+        if search_value:
+            queryset = queryset.filter(self.get_params(search_value))
+        return queryset
+
+
+    """
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -87,3 +96,4 @@ class FilterMixin:
                 )
             )
         return fields
+    """

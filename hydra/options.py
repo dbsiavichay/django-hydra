@@ -5,7 +5,8 @@ from django.urls import path
 
 # Views
 from .views import (
-    ListView, CreateView, UpdateView, DetailView, DeleteView
+    ListView, CreateView, UpdateView, DetailView, DeleteView,
+    DuplicateView,
 )
 
 ALL_FIELDS = "__all__"
@@ -36,9 +37,6 @@ class ModelSite:
 
     # Prepopulate
     prepopulate_slug = ()
-
-    # Permissions
-    permission_extra = ()
     
     # Options for build queryset
     queryset = None # Specified custom queryset
@@ -54,6 +52,7 @@ class ModelSite:
     url_update_suffix = "update"
     url_detail_suffix = "detail"
     url_delete_suffix = "delete"
+    url_duplicate_suffix = "duplicate"
 
     # Breadcrumbs
     breadcrumb_home_text = "Home"
@@ -161,7 +160,13 @@ class ModelSite:
                 ),
             ]
 
-        
+        urlpatterns += [
+            path(
+                route = f"{route_param}/{self.url_duplicate_suffix}/",
+                view = DuplicateView.as_view(site=self),
+                name = self.get_base_url_name("duplicate"),
+            ),
+        ]
 
         # urlpatterns = [
         # path('add/', wrap(self.add_view), name='%s_%s_add' % info),

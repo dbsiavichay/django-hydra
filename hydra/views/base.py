@@ -18,9 +18,11 @@ class ModuleView(TemplateView):
 
 
 def get_base_view(View, Mixin, site):
-    from hydra.mixins import PermissionRequiredMixin, BreadcrumbMixin, UrlMixin, TemplateMixin
+    from hydra.mixins import (
+        PermissionRequiredMixin, BreadcrumbMixin, UrlMixin, TemplateMixin, FilterMixin
+    )
 
-    class View(PermissionRequiredMixin, BreadcrumbMixin, UrlMixin, TemplateMixin, Mixin, View):
+    class View(PermissionRequiredMixin, BreadcrumbMixin, UrlMixin, TemplateMixin, FilterMixin, Mixin, View):
         def form_valid(self, form):
             messages.success(self.request, "Se ha guardado correctamente.")
             return super().form_valid(form)

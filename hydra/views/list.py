@@ -53,7 +53,7 @@ class ListMixin:
             row = {
                 "instance": instance,
                 "values": self.get_values(instance),
-                **urls,
+                "urls": urls,
             }
 
             yield row
