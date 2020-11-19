@@ -9,7 +9,6 @@ from django.views.generic import UpdateView as BaseUpdateView
 
 # Hydra
 from .base import get_base_view
-from hydra.shortcuts import get_urls_of_site
 
 
 class UpdateMixin:

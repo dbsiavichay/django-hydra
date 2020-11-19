@@ -20,7 +20,7 @@ class DeleteMixin:
 
         opts = {
             "model_verbose_name_plural": self.model._meta.verbose_name_plural,
-            **get_urls_of_site(self.site, self.object),
+            "urls": get_urls_of_site(self.site, self.object),
         }
 
         if "site" in context:

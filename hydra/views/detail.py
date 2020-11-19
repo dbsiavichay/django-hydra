@@ -25,7 +25,7 @@ class DetailMixin:
         opts = {
             "model_verbose_name_plural": self.model._meta.verbose_name_plural,
             "results": self._get_results(),
-            **get_urls_of_site(self.site, self.object),
+            "urls": get_urls_of_site(self.site, self.object),
         }
 
         if "site" in context:

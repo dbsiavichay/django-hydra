@@ -28,7 +28,7 @@ def get_base_view(View, Mixin, site):
             return super().form_valid(form)
 
         def get_success_url(self):
-            return get_urls_of_site(self.site).get(f"{self.site.success_url}_url")
+            return get_urls_of_site(self.site).get(f"{self.site.success_url}")
 
     View.site = site
     View.model = site.model

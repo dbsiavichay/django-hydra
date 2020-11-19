@@ -9,7 +9,7 @@ from django.forms.models import model_to_dict
 
 # Hydra
 from .base import get_base_view
-from hydra.shortcuts import get_urls_of_site, get_object
+from hydra.shortcuts import get_object
 
 class CreateMixin:
     """Definimos la clase que utilizará el modelo"""
