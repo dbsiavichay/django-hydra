@@ -9,6 +9,7 @@ from django.views.generic import UpdateView as BaseUpdateView
 
 # Hydra
 from .base import get_base_view
+from hydra.utils import import_all_mixins
 
 
 class UpdateMixin:
@@ -22,7 +23,8 @@ class UpdateView(View):
     def view(self, request, *args, **kwargs):
         """ Crear la List View del modelo """
         # Class
-        View = get_base_view(BaseUpdateView, UpdateMixin, self.site)
+        mixins = import_all_mixins() + [UpdateMixin]
+        View = get_base_view(BaseUpdateView, mixins, self.site)
 
         # Set attribures
         View.form_class = self.site.form_class

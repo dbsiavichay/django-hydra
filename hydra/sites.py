@@ -8,6 +8,8 @@ from django.db import connection
 from django.urls import path, include 
 from django.apps import apps
 
+from .utils import import_mixins
+
 
 class Site:
     """Site class"""
@@ -72,14 +74,17 @@ class Site:
         from django.contrib.auth.mixins import PermissionRequiredMixin
         urlpatterns = []
         view = menu.action.get_view_class()
+        mixins = import_mixins("BreadcrumbMixin",)
+        
         if PermissionRequiredMixin not in view.__bases__:
-            view.__bases__ = (PermissionRequiredMixin, *view.__bases__)
+            view.__bases__ = (PermissionRequiredMixin, *mixins, *view.__bases__)
+        
         view.permission_required = menu.action.get_permissions()
         if view:
             urlpatterns = [
                 path(
                     route=f"{menu.route}/",
-                    view=view.as_view(),
+                    view=view.as_view(menu=menu),
                     name=slugify(menu.name),
                 )
             ]

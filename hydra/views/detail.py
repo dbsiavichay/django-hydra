@@ -13,6 +13,7 @@ from hydra.shortcuts import get_urls_of_site
 from hydra.utils import (
     get_label_of_field,
     get_attr_of_object,
+    import_all_mixins
 )
 
 class DetailMixin:
@@ -23,7 +24,6 @@ class DetailMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         opts = {
-            "model_verbose_name_plural": self.model._meta.verbose_name_plural,
             "results": self._get_results(),
             "urls": get_urls_of_site(self.site, self.object),
         }
@@ -55,10 +55,10 @@ class DetailView(View):
     def view(self, request, *args, **kwargs):
         """ Crear la List View del modelo """
         # Class
-        View = get_base_view(BaseDetailView, DetailMixin, self.site)
+        mixins = import_all_mixins() + [DetailMixin]
+        View = get_base_view(BaseDetailView, mixins, self.site)
 
         # Set attributes
-
         View.__bases__ = (*self.site.detail_mixins, *View.__bases__)
 
         view = View.as_view()

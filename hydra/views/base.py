@@ -5,10 +5,32 @@ from django.contrib import messages
 
 # Utils
 from hydra.shortcuts import get_urls_of_site
+from hydra.utils import get_user_menu
+
 
 
 class ModuleView(TemplateView):
     """Clase para definir las vistas de los módulos de aplicaciones"""
+    menu = None
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        opts = {"title": self.menu.name}
+        if "site" in context:
+            context["site"].update(opts)
+        else:
+            context.update({
+                "site": opts
+            })
+            
+        data = {
+            "object_list": get_user_menu(self.menu.submenus.all(), self.request.user)
+        }
+
+        context.update(data)
+
+        return context
 
     def get_template_names(self):
         template_name = "hydra/module_list.html"
@@ -17,6 +39,35 @@ class ModuleView(TemplateView):
         return [template_name]
 
 
+def get_base_view(ClassView, mixins, site):
+    class View(ClassView):
+        def get_context_data(self, **kwargs):
+            context = super().get_context_data(**kwargs)
+            opts = {
+                "title": self.model._meta.verbose_name_plural,
+            }
+
+            if "site" in context:
+                context["site"].update(opts)
+            else:
+                context.update({
+                    "site": opts
+                })
+            return context
+
+        def form_valid(self, form):
+            messages.success(self.request, "Se ha guardado correctamente.")
+            return super().form_valid(form)
+
+        def get_success_url(self):
+            return get_urls_of_site(self.site).get(f"{self.site.success_url}")
+
+    View.__bases__ = (*mixins, *View.__bases__)
+    View.site = site
+    View.model = site.model
+    return View
+
+"""
 def get_base_view(View, Mixin, site):
     from hydra.mixins import (
         PermissionRequiredMixin, BreadcrumbMixin, UrlMixin, TemplateMixin, FilterMixin
@@ -33,3 +84,4 @@ def get_base_view(View, Mixin, site):
     View.site = site
     View.model = site.model
     return View
+"""

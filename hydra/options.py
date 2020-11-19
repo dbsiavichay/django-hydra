@@ -9,6 +9,8 @@ from .views import (
     DuplicateView,
 )
 
+from . import settings
+
 ALL_FIELDS = "__all__"
 
 
@@ -54,13 +56,7 @@ class ModelSite:
     url_delete_suffix = "delete"
     url_duplicate_suffix = "duplicate"
 
-    # Breadcrumbs
-    breadcrumb_home_text = "Home"
-    breadcrumb_create_text = "Create"
-    breadcrumb_update_text = "Update"
-    breadcrumb_detail_text = None
-    breadcrumb_delete_text = "Delete"
-
+   
     def __init__(self, model, **kwargs):
         self.model = model
         if not self.model:
@@ -71,6 +67,12 @@ class ModelSite:
 
         if not self.form_class and not self.fields:
             self.fields = ALL_FIELDS
+
+        self.breadcrumb_home_text = getattr(self, "breadcrumb_home_text", settings.BREADCRUMB_HOME_TEXT)
+        self.breadcrumb_create_text = getattr(self, "breadcrumb_create_text", settings.BREADCRUMB_CREATE_TEXT)
+        self.breadcrumb_update_text = getattr(self, "breadcrumb_update_text", settings.BREADCRUMB_UPDATE_TEXT)
+        self.breadcrumb_detail_text = getattr(self, "breadcrumb_detail_text", settings.BREADCRUMB_DETAIL_TEXT)
+        self.breadcrumb_delete_text = getattr(self, "breadcrumb_delete_text", settings.BREADCRUMB_DELETE_TEXT)
 
     @classmethod
     def get_info(cls):

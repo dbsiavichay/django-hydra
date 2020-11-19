@@ -9,6 +9,7 @@ from django.views.generic import ListView as BaseListView
 # Hydra
 from .base import get_base_view
 from hydra.shortcuts import get_urls_of_site
+from hydra.utils import import_all_mixins
 
 # Utilities
 from hydra.utils import (
@@ -26,7 +27,6 @@ class ListMixin:
         context = super().get_context_data(**kwargs)
 
         opts = {
-            "model_verbose_name_plural": self.model._meta.verbose_name_plural,
             "headers": self.get_headers(),
             "rows": self.get_rows(context["object_list"]),
             "page_start_index":context["page_obj"].start_index() if context["is_paginated"] else 1,
@@ -69,7 +69,8 @@ class ListView(View):
     def view(self, request, *args, **kwargs):
         """ Crear la List View del modelo """
         # Class
-        View = get_base_view(BaseListView, ListMixin, self.site)
+        mixins = import_all_mixins() + [ListMixin]
+        View = get_base_view(BaseListView, mixins, self.site)
         
         # Set attriburtes
         View.queryset = self.site.queryset

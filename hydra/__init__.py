@@ -9,6 +9,5 @@ __all__ = [
 
 default_app_config = "hydra.apps.HydraConfig"
 
-
 def autodiscover():
     autodiscover_modules('sites')

@@ -8,6 +8,7 @@ from hydra.shortcuts import get_slug_or_pk
 
 # Utils
 from hydra.utils import import_class
+from hydra import settings
 
 class BreadcrumbMixin:
     """Clase base que contiene la información común de todas las subclases"""
@@ -25,8 +26,12 @@ class BreadcrumbMixin:
             return self.get_menu_in_path(path)
 
     def get_breadcrumb_text(self, action):
-        text = getattr(self.site, "breadcrumb_%s_text" % action)
-        if not text: return None
+        attr = "breadcrumb_%s_text" % action
+        if hasattr(self, "site"):
+            text = getattr(self.site, attr, "")
+        else:
+            text = getattr(settings, attr.upper(), "")
+
         return format_html(text)
 
     def get_base(self, menu):
@@ -43,27 +48,26 @@ class BreadcrumbMixin:
         base_breadcrumbs.extend(self.get_base(menu))
         return base_breadcrumbs
 
-    def get_form_breadcrumbs(self):
+    def get_create_breadcrumbs(self):
         breadcrumbs = self.get_base_breadcrumbs()
         breadcrumbs.append((self.get_breadcrumb_text(self.action), "#"))
         return breadcrumbs
 
-    def get_create_breadcrumbs(self):
-        return self.get_form_breadcrumbs()
-
     def get_update_breadcrumbs(self):
-        return self.get_form_breadcrumbs()
+        breadcrumbs = self.get_detail_breadcrumbs()
+        breadcrumbs.append((self.get_breadcrumb_text(self.action), "#"))
+        return breadcrumbs
 
     def get_list_breadcrumbs(self):
         return self.get_base_breadcrumbs()
 
     def get_detail_breadcrumbs(self):
         """Obtiene el breadcumb para Detail View"""
-        url_name = self.site.get_url_name(self.action)
+        url_name = self.site.get_url_name("detail")
         breadcrumbs = self.get_list_breadcrumbs()
         breadcrumbs.append(
             (
-                self.get_breadcrumb_text(self.action) or str(self.object),
+                self.get_breadcrumb_text("detail") or str(self.object),
                 reverse_lazy(url_name, kwargs=get_slug_or_pk(self.object),),
             )
         )
@@ -75,8 +79,10 @@ class BreadcrumbMixin:
         return breadcrumbs
 
     def get_breadcrumbs(self):
-        attr = getattr(self, "get_%s_breadcrumbs" % self.action)
-        return attr()
+        if hasattr(self, "action"):
+            attr = getattr(self, "get_%s_breadcrumbs" % self.action)
+            return attr()
+        return self.get_base_breadcrumbs()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

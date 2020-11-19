@@ -10,6 +10,8 @@ from django.forms.models import model_to_dict
 # Hydra
 from .base import get_base_view
 from hydra.shortcuts import get_object
+from hydra.utils import import_all_mixins
+
 
 class CreateMixin:
     """Definimos la clase que utilizará el modelo"""
@@ -35,14 +37,14 @@ class CreateView(View):
     def view(self, request, *args, **kwargs):
         """ Crear la List View del modelo """
         # Class
-        View = get_base_view(BaseCreateView, CreateMixin, self.site)
+        mixins = import_all_mixins() + [CreateMixin]
+        View = get_base_view(BaseCreateView, mixins, self.site)
 
         # Set attributes
         View.form_class = self.site.form_class
         View.fields = self.site.fields
 
         View.__bases__ = (*self.site.form_mixins, *View.__bases__)
-
         view = View.as_view()
         return view(request, *args, **kwargs)
 
