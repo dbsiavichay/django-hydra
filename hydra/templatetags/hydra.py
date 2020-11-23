@@ -284,7 +284,7 @@ class FieldNode(Node):
                 "field": bounded_field,
             })
 
-            if widget_name in ("clearablefile",) and hasattr(bounded_field.form, "instance"):
+            if widget_name in ("clearablefile",) and hasattr(bounded_field.form, "instance") and hasattr(bounded_field.form.instance, bounded_field.name):
                 file = getattr(bounded_field.form.instance, bounded_field.name)
                 if file:
                     context.update({
