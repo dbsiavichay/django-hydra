@@ -5,3 +5,5 @@ BREADCRUMB_CREATE_TEXT = getattr(settings, "BREADCRUMB_CREATE_TEXT", "create")
 BREADCRUMB_UPDATE_TEXT = getattr(settings, "BREADCRUMB_UPDATE_TEXT", "update")
 BREADCRUMB_DETAIL_TEXT = getattr(settings, "BREADCRUMB_DETAIL_TEXT", "detail")
 BREADCRUMB_DELETE_TEXT = getattr(settings, "BREADCRUMB_DELETE_TEXT", "delete")
+
+TEMPLATE_WIDGETS = getattr(settings, "TEMPLATE_WIDGETS", {})

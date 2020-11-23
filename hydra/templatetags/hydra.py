@@ -11,7 +11,7 @@ from django.forms.models import model_to_dict
 from django.contrib.contenttypes.models import ContentType
 from django.utils.safestring import mark_safe
 from collections.abc import Iterable
-from django.conf import settings
+from hydra import settings
 
 
 
@@ -155,8 +155,8 @@ def field_type(field):
     return ""
 
 
-@register.filter(name="widget_type")
-def widget_type(field):
+@register.filter(name="widget_name")
+def widget_name(field):
     """Template filter that returns field widget class name (in lower case).
     E.g. if field's widget is TextInput then {{ field|widget_type }} will return
     'textinput'.
@@ -172,6 +172,11 @@ def widget_type(field):
         return field.field.widget.__class__.__name__.lower()
     return ""
 
+
+# Filter utilities
+@register.filter("json")
+def get_json(value):
+    return json.dumps(value)
 
 # ======================== render_field tag ==============================
 
@@ -252,7 +257,7 @@ class FieldNode(Node):
         """
 
         bounded_field = self.field.resolve(context)
-        field = getattr(bounded_field, "field", None)
+        #field = getattr(bounded_field, "field", None)
         with context.push():
             for key, value in self.attrs:
                 if key == "class":
@@ -261,41 +266,39 @@ class FieldNode(Node):
                     bounded_field.field.widget.input_type = value.resolve(context)
                 else:
                     context.update({key: value.resolve(context)})
-
-            context.update({"field": bounded_field})
-            widget = widget_type(bounded_field)
-
-            template_name = "hydra/forms/{widget}.html".format(widget=widget)
             
-            try:
-                t = context.template.engine.get_template(template_name)
-                component = t.render(context)
-                context.pop()
-                return mark_safe(component)
-            except TemplateDoesNotExist:
-                print(widget)
-                return bounded_field
+            # Get template name
+            if not bounded_field:
+                raise ImproperlyConfigured('The field passed do not exist.')
+
+            widget_name = bounded_field.widget_type
+            if not widget_name in settings.TEMPLATE_WIDGETS:
+                if not "default" in settings.TEMPLATE_WIDGETS:
+                    raise ImproperlyConfigured(f"Does not exist template name for '{widget_name}' or default widget template.")
+                template_name = settings.TEMPLATE_WIDGETS.get("default")
+            else:
+                template_name = settings.TEMPLATE_WIDGETS.get(widget_name)
+
+            
+            context.update({
+                "field": bounded_field,
+            })
+
+            if widget_name in ("clearablefile",) and hasattr(bounded_field.form, "instance"):
+                file = getattr(bounded_field.form.instance, bounded_field.name)
+                if file:
+                    context.update({
+                        "file_name": file.name,
+                        "file_url": file.url
+                    })
+            
+            t = context.template.engine.get_template(template_name)
+            component = t.render(context)
+            context.pop()
+            return mark_safe(component)
+            
 
 
-@register.inclusion_tag("hydra/forms/form.html")
-def render_form(form, **kwargs):
-    
-    calculate_cols = len(form.fields) // 10
-    if len(form.fields) % 10 > 0:
-        calculate_cols += 1
-
-    columns = int(kwargs["cols"]) if "cols" in kwargs else calculate_cols
-    breakpoint = kwargs["breakpoint"] if "breakpoint" in kwargs else "md"
-    col = 12 // columns
-    col_class = "col-{breakpoint}-{col}".format(breakpoint=breakpoint, col=col)
-    return {"form": form, "col": col_class}
-
-
-
-# Filter utilities
-@register.filter("json")
-def get_json(value):
-    return json.dumps(value)
 """
 @register.filter
 def verbose_name(obj):

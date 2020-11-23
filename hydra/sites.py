@@ -73,9 +73,9 @@ class Site:
     def get_view_urls(self, menu):
         from django.contrib.auth.mixins import PermissionRequiredMixin
         urlpatterns = []
-        view = menu.action.get_view_class()
         mixins = import_mixins("BreadcrumbMixin",)
-        
+        view = menu.action.get_view_class()
+        view.menu = None
         if PermissionRequiredMixin not in view.__bases__:
             view.__bases__ = (PermissionRequiredMixin, *mixins, *view.__bases__)
         
