@@ -45,9 +45,18 @@ class FormsetList:
         return headers
 
     def get_instances(self, **kwargs):
+        related_initial = None
+        if 'initial' in kwargs and 'related_initial' in kwargs['initial']:
+            related_initial = kwargs.get('initial').get('related_initial')  
+
         for key in self.formsets:
             formset_class = self.formsets[key]["class"]
+            if related_initial :
+                kwargs['initial'] = related_initial.get(formset_class.model, [])
+            else:
+                kwargs['initial'] = []
             instance = formset_class(**kwargs)
+            instance.extra += len(kwargs['initial'])
             self.formsets.get(key).update({
                 "instance": instance,
             })

@@ -5,6 +5,9 @@ from importlib import import_module
 # Django
 from django.core.exceptions import FieldDoesNotExist
 from django.forms.utils import pretty_name
+from django.utils.html import format_html
+
+from hydra import settings
 
 
 def get_label_of_field(model, field):
@@ -62,7 +65,16 @@ def get_attr_of_object(instance, field):
         pass
 
     attr = getattr(instance, name)
-    return attr() if callable(attr) else attr
+    
+    if hasattr(attr, '__class__') and attr.__class__.__name__ == 'ManyRelatedManager':
+        attr = [str(obj) for obj in attr.all()]
+
+    attr = attr() if callable(attr) else attr
+
+    if isinstance(attr, bool):
+        attr = format_html(settings.BOOLEAN_YES) if attr else format_html(settings.BOOLEAN_NO)
+
+    return attr
 
 
 def import_class(module_name, class_name):

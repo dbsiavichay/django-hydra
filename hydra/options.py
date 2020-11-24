@@ -74,24 +74,22 @@ class ModelSite:
         self.breadcrumb_detail_text = getattr(self, "breadcrumb_detail_text", settings.BREADCRUMB_DETAIL_TEXT)
         self.breadcrumb_delete_text = getattr(self, "breadcrumb_delete_text", settings.BREADCRUMB_DELETE_TEXT)
 
-    @classmethod
-    def get_info(cls):
+  
+    def get_info(self):
         """Obtiene la información del modelo"""
         #info = cls.model._meta.app_label, cls.model._meta.model_name
-        info = slugify(cls.model._meta.app_config.verbose_name), slugify(cls.model._meta.verbose_name)
+        info = slugify(self.model._meta.app_config.verbose_name), slugify(self.model._meta.verbose_name)
         return info
 
     # Url methods
-    @classmethod
-    def get_base_url_name(cls, suffix):
-        info = cls.get_info()
-        url_suffix = getattr(cls, "url_%s_suffix" % suffix)
+    def get_base_url_name(self, suffix):
+        info = self.get_info()
+        url_suffix = getattr(self, "url_%s_suffix" % suffix)
         base_url_name = "%s_%s_%s" % (*info, url_suffix)
         return base_url_name
 
-    @classmethod
-    def get_url_name(cls, suffix):
-        url_name = "site:%s" % cls.get_base_url_name(suffix)
+    def get_url_name(self, suffix):
+        url_name = "site:%s" % self.get_base_url_name(suffix)
         return url_name
 
     def get_urls(self):
