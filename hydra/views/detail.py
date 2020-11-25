@@ -2,6 +2,7 @@
 # Django
 from django.views.generic import View
 from django.views.generic import DetailView as BaseDetailView
+from django.contrib.admin.utils import flatten
 
 # Mixins
 #from hydra.mixins import MultiplePermissionRequiredModelMixin
@@ -23,8 +24,10 @@ class DetailMixin:
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        flatten_results, fieldset_results = self.get_results()
         opts = {
-            "results": self._get_results(),
+            "results": fieldset_results,
+            "flatten_results": flatten_results,
             "urls": get_urls_of_site(self.site, self.object),
         }
 
@@ -37,16 +40,30 @@ class DetailMixin:
 
         return context
 
-    def _get_results(self):
-        fields = (
-            self.site.detail_fields
-            if self.site.detail_fields
-            else (field.name for field in self.model._meta.fields)
-        )
+    def get_results(self):
+        fields = flatten(self.site.detail_fields) 
+        fields = fields if fields else (field.name for field in self.model._meta.fields)
+        results = {}
         for field in fields:
             label = get_label_of_field(self.object, field)
             value = get_attr_of_object(self.object, field)
-            yield (label, value)
+            results[field] = (label, value)
+
+        flatten_results = results.values()
+        fieldset_results = []
+        for fieldset in self.site.detail_fields:
+            if isinstance(fieldset, (list, tuple)):
+                fieldset_results.append({
+                    'bs_cols': int(12 / len(fieldset)),
+                    'fields':[results.get(field, ()) for field in fieldset]
+                })
+            else:
+                fieldset_results.append({
+                    'bs_cols': 12,
+                    'fields': [results.get(fieldset, ()),]
+                })
+
+        return flatten_results, fieldset_results
 
 
 class DetailView(View):

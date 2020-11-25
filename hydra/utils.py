@@ -66,7 +66,7 @@ def get_attr_of_object(instance, field):
 
     attr = getattr(instance, name)
     
-    if hasattr(attr, '__class__') and attr.__class__.__name__ == 'ManyRelatedManager':
+    if hasattr(attr, '__class__') and (attr.__class__.__name__ == 'ManyRelatedManager' or attr.__class__.__name__ == 'RelatedManager'):
         attr = [str(obj) for obj in attr.all()]
 
     attr = attr() if callable(attr) else attr

@@ -7,6 +7,7 @@ from django.forms import BaseModelForm, ChoiceField
 from django.forms.models import ModelFormMetaclass as DjangoModelFormMetaclass
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.admin.utils import flatten
 from django.apps import apps
 
 # Models
@@ -31,12 +32,7 @@ class ModelFormMetaclass(DjangoModelFormMetaclass):
         return new_class
 
     def __fields__(fieldsets):
-        fields = list()
-        for fieldset in fieldsets:
-            if isinstance(fieldset, tuple):
-                fields += [field for field in fieldset]
-            else:
-                fields.append(fieldset)
+        fields = flatten(fieldsets)
         return tuple(fields)
 
 

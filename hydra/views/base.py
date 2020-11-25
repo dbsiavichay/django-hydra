@@ -60,7 +60,7 @@ def get_base_view(ClassView, mixins, site):
             return super().form_valid(form)
 
         def get_success_url(self):
-            return get_urls_of_site(self.site).get(f"{self.site.success_url}")
+            return get_urls_of_site(self.site, self.object).get(f"{self.site.success_url}")
 
     View.__bases__ = (*mixins, *View.__bases__)
     View.site = site
